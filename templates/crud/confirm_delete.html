@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar {{ title }}{% endblock %}
+
+{% block content %}
+<h2>Eliminar {{ title }}</h2>
+
+<p>¿Confirmas que deseas eliminar “{{ object }}”?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirmar eliminación</button>
+    <a href="{{ view.success_url }}">Cancelar</a>
+</form>
+{% endblock %}
