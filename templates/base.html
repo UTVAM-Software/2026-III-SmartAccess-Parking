@@ -4,29 +4,285 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}SmartAccess Parking{% endblock %}</title>
+    <style>
+        :root {
+            --fondo: #f1f5f9;
+            --blanco: #ffffff;
+            --azul-oscuro: #0f172a;
+            --azul: #2563eb;
+            --azul-hover: #1d4ed8;
+            --texto: #1e293b;
+            --texto-secundario: #64748b;
+            --borde: #e2e8f0;
+            --verde: #16a34a;
+            --rojo: #dc2626;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            background: var(--fondo);
+            color: var(--texto);
+            font-family: "Segoe UI", Arial, sans-serif;
+            line-height: 1.6;
+        }
+        header {
+            background: var(--azul-oscuro);
+            color: var(--blanco);
+            padding: 22px 6%;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15);
+        }
+        .encabezado {
+            max-width: 1200px;
+            margin: auto;
+        }
+        .marca {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--azul);
+            color: white;
+            font-size: 25px;
+            font-weight: 800;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+            letter-spacing: -0.5px;
+        }
+        .subtitulo {
+            margin: 2px 0 0;
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 9px;
+            font-size: 14px;
+            transition: 0.2s ease;
+        }
+        nav a:hover {
+            color: white;
+            background: #263449;
+        }
+        main {
+            width: 88%;
+            max-width: 1200px;
+            min-height: 65vh;
+            margin: 35px auto;
+        }
+        .titulo-pagina {
+            margin-bottom: 22px;
+        }
+        .titulo-pagina h2 {
+            margin: 0;
+            color: var(--azul-oscuro);
+            font-size: 28px;
+            letter-spacing: -0.5px;
+        }
+        .titulo-pagina p {
+            margin: 5px 0 0;
+            color: var(--texto-secundario);
+            font-size: 14px;
+        }
+        .panel {
+            padding: 26px;
+            border: 1px solid var(--borde);
+            border-radius: 16px;
+            background: var(--blanco);
+            box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04);
+        }
+        .acciones {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        a.boton,
+        button,
+        input[type="submit"] {
+            display: inline-block;
+            border: none;
+            border-radius: 9px;
+            background: var(--azul);
+            color: white;
+            padding: 11px 17px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        a.boton:hover,
+        button:hover,
+        input[type="submit"]:hover {
+            background: var(--azul-hover);
+            transform: translateY(-1px);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th {
+            padding: 14px;
+            background: #f8fafc;
+            color: #475569;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--borde);
+        }
+        td {
+            padding: 14px;
+            border-bottom: 1px solid var(--borde);
+            font-size: 14px;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: #f8fafc;
+        }
+        td a {
+            color: var(--azul);
+            font-weight: 600;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        td a:hover {
+            text-decoration: underline;
+        }
+        form p {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input:not([type="checkbox"]):not([type="submit"]),
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            background: white;
+            color: var(--texto);
+            font-family: inherit;
+            font-size: 14px;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 2px solid #bfdbfe;
+            border-color: var(--azul);
+        }
+        .mensaje {
+            max-width: 1200px;
+            width: 88%;
+            margin: 22px auto 0;
+            padding: 13px 17px;
+            border-radius: 10px;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .vacio {
+            padding: 35px 15px;
+            text-align: center;
+            color: var(--texto-secundario);
+        }
+        footer {
+            padding: 22px;
+            background: var(--blanco);
+            border-top: 1px solid var(--borde);
+            color: var(--texto-secundario);
+            text-align: center;
+            font-size: 13px;
+        }
+        @media (max-width: 700px) {
+            header {
+                padding: 20px;
+            }
+            header h1 {
+                font-size: 22px;
+            }
+            nav {
+                gap: 4px;
+            }
+            nav a {
+                padding: 9px;
+                font-size: 13px;
+            }
+            main {
+                width: 92%;
+                margin: 24px auto;
+            }
+            .panel {
+                padding: 16px;
+                overflow-x: auto;
+            }
+            .titulo-pagina h2 {
+                font-size: 23px;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>SmartAccess Parking</h1>
-        <nav>
-            <a href="{% url 'usuarios:usuario_list' %}">Usuarios</a>
-            <a href="{% url 'usuarios:vehiculo_list' %}">Vehículos</a>
-            <a href="{% url 'estacionamientos:estacionamiento_list' %}">Estacionamientos</a>
-            <a href="{% url 'estacionamientos:sensor_list' %}">Sensores</a>
-            <a href="{% url 'registros:registro_list' %}">Registros de uso</a>
-            <a href="{% url 'registros:captura_list' %}">Capturas de placa</a>
-            <a href="{% url 'registros:incidencia_list' %}">Incidencias</a>
-        </nav>
+        <div class="encabezado">
+            <div class="marca">
+                <div class="logo">S</div>
+                <div>
+                    <h1>SmartAccess Parking</h1>
+                    <p class="subtitulo">Sistema inteligente de gestión de estacionamientos</p>
+                </div>
+            </div>
+            <nav>
+                <a href="{% url 'usuarios:usuario_list' %}">Usuarios</a>
+                <a href="{% url 'usuarios:vehiculo_list' %}">Vehículos</a>
+                <a href="{% url 'estacionamientos:estacionamiento_list' %}">Estacionamientos</a>
+                <a href="{% url 'estacionamientos:sensor_list' %}">Sensores</a>
+                <a href="{% url 'registros:registro_list' %}">Registros de uso</a>
+                <a href="{% url 'registros:captura_list' %}">Capturas de placa</a>
+                <a href="{% url 'registros:incidencia_list' %}">Incidencias</a>
+            </nav>
+        </div>
     </header>
-
     {% if messages %}
         {% for message in messages %}
-            <p>{{ message }}</p>
+            <div class="mensaje">{{ message }}</div>
         {% endfor %}
     {% endif %}
-
     <main>
         {% block content %}{% endblock %}
     </main>
+    <footer>
+        SmartAccess Parking · Gestión y control de estacionamientos
+    </footer>
 </body>
 </html>

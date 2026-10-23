@@ -1,33 +1,65 @@
 {% extends "base.html" %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}{{ title }} | SmartAccess Parking{% endblock %}
 {% block content %}
-<h2>{{ title }}</h2>
-
-<p><a href="{% url create_url %}">Crear registro</a></p>
-
-<table>
-    <thead>
-        <tr>
-            <th>Registro</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in objects %}
+<div class="titulo-pagina">
+    <h2>{{ title }}</h2>
+    <p>Administra y consulta los registros del sistema.</p>
+</div>
+<div class="panel">
+    <div class="acciones">
+        <div>
+            <h3 style="margin: 0; font-size: 18px;">Listado de {{ title|lower }}</h3>
+            <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">
+                Consulta y administra la información registrada.
+            </p>
+        </div>
+        <a class="boton" href="{% url create_url %}">
+            + Agregar registro
+        </a>
+    </div>
+    <table>
+        <thead>
             <tr>
-                <td>{{ item }}</td>
-                <td>
-                    <a href="{% url update_url item.pk %}">Editar</a>
-                    <a href="{% url delete_url item.pk %}">Eliminar</a>
-                </td>
+                <th>Información del registro</th>
+                <th style="text-align: right;">Acciones</th>
             </tr>
-        {% empty %}
-            <tr>
-                <td colspan="2">No hay registros.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for item in objects %}
+                <tr>
+                    <td>
+                        <strong>{{ item }}</strong>
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <a href="{% url update_url item.pk %}">Editar</a>
+                        <a href="{% url delete_url item.pk %}"
+                           style="color: #dc2626;">Eliminar</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">
+                        <div class="vacio">
+                            <div style="font-size: 32px; margin-bottom: 8px;">
+                                &#128203;
+                            </div>
+                            <strong>No hay registros todavía</strong>
+                            <p style="margin: 5px 0 15px;">
+                                Puedes comenzar agregando un nuevo registro.
+                            </p>
+                            <a class="boton" href="{% url create_url %}">
+                                + Agregar registro
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if objects %}
+        <p style="margin: 16px 0 0; color: #64748b; font-size: 13px;">
+            Total de registros: {{ objects|length }}
+        </p>
+    {% endif %}
+</div>
 {% endblock %}

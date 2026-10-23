@@ -1,15 +1,54 @@
 {% extends "base.html" %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}{{ title }} | SmartAccess Parking{% endblock %}
 {% block content %}
-<h2>{{ title }}</h2>
-
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-
-    <button type="submit">Guardar</button>
-    <a href="{{ view.success_url }}">Cancelar</a>
-</form>
+<div class="titulo-pagina">
+    <h2>{{ title }}</h2>
+    <p>Completa los campos para guardar la información del sistema.</p>
+</div>
+<div class="panel" style="max-width: 760px; margin: 0 auto;">
+    <div style="margin-bottom: 25px; padding-bottom: 18px; border-bottom: 1px solid #e2e8f0;">
+        <h3 style="margin: 0; font-size: 19px; color: #0f172a;">
+            Datos del registro
+        </h3>
+        <p style="margin: 5px 0 0; color: #64748b; font-size: 14px;">
+            Los campos se validarán antes de guardar.
+        </p>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div style="padding: 12px; margin-bottom: 18px; border-radius: 8px; background: #fee2e2; color: #991b1b;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        {% for field in form %}
+            <div style="margin-bottom: 22px;">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span style="color: #dc2626;">*</span>
+                    {% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="display: block; margin-top: 5px; color: #64748b;">
+                        {{ field.help_text }}
+                    </small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <p style="margin: 6px 0 0; color: #dc2626; font-size: 13px;">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+            <button type="submit">Guardar registro</button>
+            <a href="{{ view.success_url }}"
+               style="display: inline-block; padding: 11px 17px; border: 1px solid #cbd5e1; border-radius: 9px; color: #334155; background: #f8fafc; text-decoration: none; font-size: 14px; font-weight: 600;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
 {% endblock %}
