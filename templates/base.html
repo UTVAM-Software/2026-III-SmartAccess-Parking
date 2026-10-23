@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}SmartAccess Parking{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>SmartAccess Parking</h1>
+        <nav>
+            <a href="{% url 'usuarios:usuario_list' %}">Usuarios</a>
+            <a href="{% url 'usuarios:vehiculo_list' %}">Vehículos</a>
+            <a href="{% url 'estacionamientos:estacionamiento_list' %}">Estacionamientos</a>
+            <a href="{% url 'estacionamientos:sensor_list' %}">Sensores</a>
+            <a href="{% url 'registros:registro_list' %}">Registros de uso</a>
+            <a href="{% url 'registros:captura_list' %}">Capturas de placa</a>
+            <a href="{% url 'registros:incidencia_list' %}">Incidencias</a>
+        </nav>
+    </header>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

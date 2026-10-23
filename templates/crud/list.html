@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<p><a href="{% url create_url %}">Crear registro</a></p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Registro</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in objects %}
+            <tr>
+                <td>{{ item }}</td>
+                <td>
+                    <a href="{% url update_url item.pk %}">Editar</a>
+                    <a href="{% url delete_url item.pk %}">Eliminar</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="2">No hay registros.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
