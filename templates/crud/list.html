@@ -3,31 +3,40 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<h2>{{ title }}</h2>
+<section>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <h2 class="page-title">{{ title }}</h2>
+        <a class="btn btn-primary rounded-pill px-4" href="{% url create_url %}">Crear registro</a>
+    </div>
 
-<p><a href="{% url create_url %}">Crear registro</a></p>
-
-<table>
-    <thead>
-        <tr>
-            <th>Registro</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in objects %}
-            <tr>
-                <td>{{ item }}</td>
-                <td>
-                    <a href="{% url update_url item.pk %}">Editar</a>
-                    <a href="{% url delete_url item.pk %}">Eliminar</a>
-                </td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="2">No hay registros.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="app-card">
+        <div class="table-responsive">
+            <table class="table app-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4 py-3">Registro</th>
+                        <th class="pe-4 py-3 text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in objects %}
+                        <tr>
+                            <td class="ps-4 py-3">{{ item }}</td>
+                            <td class="pe-4 py-3">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a class="btn btn-sm btn-light rounded-pill px-3" href="{% url update_url item.pk %}">Editar</a>
+                                    <a class="btn btn-sm btn-outline-danger rounded-pill px-3" href="{% url delete_url item.pk %}">Eliminar</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="py-4 text-center text-secondary" colspan="2">No hay registros.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 {% endblock %}
