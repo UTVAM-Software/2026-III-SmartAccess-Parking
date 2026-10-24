@@ -2,46 +2,64 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Usuarios - SmartAccess Parking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        body { min-height: 100vh; color: #183247; background: radial-gradient(circle at 88% 0%, #e4f3f7 0, transparent 28rem), #f3f7fa; font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+        .brand-lockup { display: flex; align-items: center; gap: .75rem; margin-bottom: 2.5rem; color: #102a43; font-weight: 750; letter-spacing: -.02em; }
+        .brand-mark { display: grid; width: 2.6rem; height: 2.6rem; place-items: center; border-radius: .8rem; color: #073a4c; background: linear-gradient(145deg, #5ce0c3, #9df0d7); font-size: .9rem; font-weight: 800; }
+        .page-title { color: #183247; font-size: clamp(1.65rem, 2.5vw, 2.2rem); font-weight: 750; letter-spacing: -.04em; }
+        .surface-card { overflow: hidden; border: 1px solid #e2eaf0; border-radius: 1.15rem; background: #fff; box-shadow: 0 12px 34px rgba(29, 58, 79, .06); }
+        .table thead th { border-bottom: 1px solid #e2eaf0; color: #667b8d; background: #f7f9fb; font-size: .76rem; letter-spacing: .045em; text-transform: uppercase; }
+        .table tbody td { border-color: #edf1f4; color: #29465b; }
+    </style>
 </head>
 <body>
-    <h1>Usuarios registrados</h1>
+    <main class="container py-4 py-lg-5">
+        <div class="brand-lockup"><span class="brand-mark" aria-hidden="true">SP</span><span>SmartAccess Parking</span></div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <h1 class="page-title mb-0">Usuarios registrados</h1>
+            <a class="btn btn-primary rounded-pill px-4" href="{% url 'nuevo_usuario' %}">Nuevo usuario</a>
+        </div>
 
-    <a href="{% url 'nuevo_usuario' %}">Nuevo usuario</a>
+        <div class="surface-card">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4 py-3">Nombre</th>
+                            <th class="py-3">Apellido paterno</th>
+                            <th class="py-3">Apellido materno</th>
+                            <th class="py-3">Correo</th>
+                            <th class="py-3">Teléfono</th>
+                            <th class="pe-4 py-3 text-end">Acciones</th>
+                        </tr>
+                    </thead>
 
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Apellido paterno</th>
-                <th>Apellido materno</th>
-                <th>Correo</th>
-                <th>Teléfono</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for usuario in usuarios %}
-            <tr>
-                <td>{{ usuario.nombre }}</td>
-                <td>{{ usuario.apellido_paterno }}</td>
-                <td>{{ usuario.apellido_materno }}</td>
-                <td>{{ usuario.correo }}</td>
-                <td>{{ usuario.telefono }}</td>
-                <td>
-                    <a href="{% url 'editar_usuario' usuario.id %}">Editar</a>
-                    |
-                    <a href="{% url 'eliminar_usuario' usuario.id %}">Eliminar</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6">No hay usuarios registrados.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td class="ps-4 py-3">{{ usuario.nombre }}</td>
+                            <td>{{ usuario.apellido_paterno }}</td>
+                            <td>{{ usuario.apellido_materno }}</td>
+                            <td>{{ usuario.correo }}</td>
+                            <td>{{ usuario.telefono }}</td>
+                            <td class="pe-4 text-end text-nowrap">
+                                <a class="btn btn-sm btn-light rounded-pill px-3" href="{% url 'editar_usuario' usuario.id %}">Editar</a>
+                                <span class="text-secondary px-1">|</span>
+                                <a class="btn btn-sm btn-outline-danger rounded-pill px-3" href="{% url 'eliminar_usuario' usuario.id %}">Eliminar</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td class="py-4 text-center text-secondary" colspan="6">No hay usuarios registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </body>
 </html>
