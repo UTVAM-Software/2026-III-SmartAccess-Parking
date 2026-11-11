@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import CapturaPlaca, Incidencia, RegistroUso
 
@@ -69,3 +70,36 @@ class IncidenciaForm(forms.ModelForm):
         widgets = {
             "fecha_hora": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
+
+        
+
+
+class IntentoAccesoForm(forms.Form):
+    """Entrada manual de evidencia; el resultado lo determina el servidor."""
+
+    placa_capturada = forms.CharField(
+        label="Placa capturada o ingresada",
+        max_length=20,
+        required=False,
+        strip=True,
+        help_text="Simulación manual: no se ejecuta OCR ni se usa una cámara.",
+    )
+    imagen = forms.ImageField(
+        label="Fotografía de la placa (opcional)",
+        required=False,
+    )
+
+    def clean_placa_capturada(self):
+        return self.cleaned_data["placa_capturada"].strip().upper()
+
+    def clean_imagen(self):
+        image = self.cleaned_data.get("imagen")
+        if image and image.size > 5 * 1024 * 1024:
+            raise ValidationError("La fotografía no puede superar 5 MB.")
+        return image
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get("placa_capturada") and not cleaned_data.get("imagen"):
+            raise ValidationError("Ingresa una placa o adjunta una fotografía.")
+        return cleaned_data

@@ -196,14 +196,41 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="mainNavigation">
                     <nav class="navbar-nav gap-xl-1">
-                        <a class="nav-link" href="{% url 'usuarios:usuario_list' %}">Usuarios</a>
-                        <a class="nav-link" href="{% url 'usuarios:vehiculo_list' %}">Vehículos</a>
-                        <a class="nav-link"
-                            href="{% url 'estacionamientos:estacionamiento_list' %}">Estacionamientos</a>
-                        <a class="nav-link" href="{% url 'estacionamientos:sensor_list' %}">Sensores</a>
-                        <a class="nav-link" href="{% url 'registros:registro_list' %}">Registros de uso</a>
-                        <a class="nav-link" href="{% url 'registros:captura_list' %}">Capturas de placa</a>
-                        <a class="nav-link" href="{% url 'registros:incidencia_list' %}">Incidencias</a>
+                        {% if user.is_authenticated %}
+                            {% if perms.usuarios.view_usuario %}
+                                <a class="nav-link" href="{% url 'usuarios:usuario_list' %}">Usuarios</a>
+                            {% endif %}
+                            {% if perms.usuarios.view_vehiculo %}
+                                <a class="nav-link" href="{% url 'usuarios:vehiculo_list' %}">Vehículos</a>
+                            {% endif %}
+                            {% if perms.usuarios.view_acreditacion %}
+                                <a class="nav-link" href="{% url 'usuarios:acreditacion_list' %}">Acreditaciones</a>
+                            {% endif %}
+                            {% if perms.estacionamientos.view_estacionamiento %}
+                                <a class="nav-link" href="{% url 'estacionamientos:estacionamiento_list' %}">Estacionamientos</a>
+                            {% endif %}
+                            {% if perms.estacionamientos.view_sensor %}
+                                <a class="nav-link" href="{% url 'estacionamientos:sensor_list' %}">Sensores</a>
+                            {% endif %}
+                            {% if perms.registros.view_registrouso %}
+                                <a class="nav-link" href="{% url 'registros:registro_list' %}">Registros de uso</a>
+                            {% endif %}
+                            {% if perms.registros.view_capturaplaca %}
+                                <a class="nav-link" href="{% url 'registros:captura_list' %}">Capturas de placa</a>
+                            {% endif %}
+                            {% if perms.registros.view_incidencia %}
+                                <a class="nav-link" href="{% url 'registros:incidencia_list' %}">Incidencias</a>
+                            {% endif %}
+                            {% if perms.registros.view_intentoacceso %}
+                                <a class="nav-link" href="{% url 'registros:intento_list' %}">Intentos de acceso</a>
+                            {% endif %}
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button class="nav-link border-0 bg-transparent" type="submit">Cerrar sesión</button>
+                            </form>
+                        {% else %}
+                            <a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a>
+                        {% endif %}
                     </nav>
                 </div>
             </div>
