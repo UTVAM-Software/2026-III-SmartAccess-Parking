@@ -1,21 +1,69 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ title }} | SmartAccess Parking{% endblock %}
 
 {% block content %}
 <section class="mx-auto" style="max-width: 800px;">
     <div class="app-card p-4 p-md-5">
-        <h2 class="page-title mb-4">{{ title }}</h2>
+        <h2 class="page-title mb-2">{{ title }}</h2>
+        <p class="text-secondary mb-4">
+            Completa los campos para guardar la información del sistema.
+        </p>
+
+        <div class="border-bottom pb-3 mb-4">
+            <h3 class="h5 mb-1">Datos del registro</h3>
+            <p class="text-secondary small mb-0">
+                Los campos se validarán antes de guardar.
+            </p>
+        </div>
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {% for hidden_field in form.hidden_fields %}
+                {{ hidden_field }}
+                {% for error in hidden_field.errors %}
+                    <div class="text-danger small mb-2">{{ error }}</div>
+                {% endfor %}
+            {% endfor %}
+
             <div class="django-form">
-                {{ form.as_p }}
+                {% for field in form.visible_fields %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="text-danger" aria-hidden="true">*</span>
+                                <span class="visually-hidden">obligatorio</span>
+                            {% endif %}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in field.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
             </div>
 
             <div class="d-flex flex-wrap gap-2 border-top pt-4 mt-4">
-                <button class="btn btn-primary rounded-pill px-4" type="submit">Guardar</button>
-                <a class="btn btn-light rounded-pill px-4" href="{{ view.success_url }}">Cancelar</a>
+                <button class="btn btn-primary rounded-pill px-4" type="submit">
+                    Guardar
+                </button>
+                <a class="btn btn-light rounded-pill px-4" href="{{ view.success_url }}">
+                    Cancelar
+                </a>
             </div>
         </form>
     </div>

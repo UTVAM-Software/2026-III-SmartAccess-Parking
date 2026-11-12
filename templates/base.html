@@ -1,12 +1,16 @@
 <!doctype html>
 <html lang="es">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}SmartAccess Parking{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous">
+
     <style>
         :root {
             --parking-ink: #183247;
@@ -18,11 +22,21 @@
             --parking-border: #e2eaf0;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
             color: var(--parking-ink);
-            background: radial-gradient(circle at 88% 0%, #e4f3f7 0, transparent 28rem), var(--parking-canvas);
+            background:
+                radial-gradient(circle at 88% 0%, #e4f3f7 0, transparent 28rem),
+                var(--parking-canvas);
             font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
         }
 
         .app-navbar {
@@ -74,18 +88,22 @@
         }
 
         .app-main {
+            width: 100%;
             max-width: 1240px;
         }
 
-        .page-title {
-            margin: 0;
+        .page-title,
+        .titulo-pagina h2,
+        main > h2 {
+            margin: 0 0 1.25rem;
             color: var(--parking-ink);
             font-size: clamp(1.65rem, 2.5vw, 2.25rem);
             font-weight: 750;
             letter-spacing: -.04em;
         }
 
-        .app-card {
+        .app-card,
+        .panel {
             overflow: hidden;
             border: 1px solid var(--parking-border);
             border-radius: 1.15rem;
@@ -93,26 +111,82 @@
             box-shadow: 0 12px 34px rgba(29, 58, 79, .06);
         }
 
-        .app-table thead th {
+        .app-table,
+        main table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+        .app-table thead th,
+        main table th {
+            padding: .85rem;
             border-bottom: 1px solid var(--parking-border);
             color: #667b8d;
             background: #f7f9fb;
             font-size: .76rem;
             font-weight: 700;
             letter-spacing: .055em;
+            text-align: left;
             text-transform: uppercase;
         }
 
-        .app-table tbody td {
-            border-color: #edf1f4;
+        .app-table tbody td,
+        main table td {
+            padding: .85rem;
+            border-bottom: 1px solid #edf1f4;
             color: #29465b;
         }
 
-        .django-form p {
+        .app-table tbody tr:hover td,
+        main table tbody tr:hover td {
+            background: #f7f9fb;
+        }
+
+        main table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .acciones {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        main a.boton,
+        main button:not(.nav-link),
+        main input[type="submit"] {
+            display: inline-block;
+            padding: .68rem 1rem;
+            border: 0;
+            border-radius: .65rem;
+            color: #fff;
+            background: var(--parking-blue);
+            font: inherit;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color .18s ease, transform .18s ease;
+        }
+
+        main a.boton:hover,
+        main button:not(.nav-link):hover,
+        main input[type="submit"]:hover {
+            color: #fff;
+            background: var(--parking-navy);
+            transform: translateY(-1px);
+        }
+
+        .django-form p,
+        main form p {
             margin-bottom: 1.15rem;
         }
 
-        .django-form p label {
+        .django-form p label,
+        main form p label {
             display: block;
             margin-bottom: .4rem;
             color: #344f63;
@@ -120,9 +194,12 @@
             font-weight: 650;
         }
 
-        .django-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+        .django-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
         .django-form select,
-        .django-form textarea {
+        .django-form textarea,
+        main form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
+        main form select,
+        main form textarea {
             display: block;
             width: 100%;
             min-height: 2.8rem;
@@ -131,34 +208,43 @@
             border-radius: .7rem;
             color: var(--parking-ink);
             background-color: #fff;
+            font: inherit;
             transition: border-color .18s ease, box-shadow .18s ease;
         }
 
-        .django-form textarea {
+        .django-form textarea,
+        main form textarea {
             min-height: 7rem;
         }
 
         .django-form input:focus,
         .django-form select:focus,
-        .django-form textarea:focus {
+        .django-form textarea:focus,
+        main form input:focus,
+        main form select:focus,
+        main form textarea:focus {
             border-color: #69b8c9;
             outline: 0;
             box-shadow: 0 0 0 .22rem rgba(11, 111, 159, .12);
         }
 
         .django-form input[type="checkbox"],
-        .django-form input[type="radio"] {
+        .django-form input[type="radio"],
+        main form input[type="checkbox"],
+        main form input[type="radio"] {
             accent-color: var(--parking-blue);
         }
 
-        .django-form .helptext {
+        .django-form .helptext,
+        main form .helptext {
             display: block;
             margin-top: .35rem;
             color: var(--parking-muted);
             font-size: .82rem;
         }
 
-        .django-form .errorlist {
+        .django-form .errorlist,
+        main form .errorlist {
             margin: .35rem 0 0;
             padding: 0;
             color: #b42318;
@@ -166,7 +252,8 @@
             list-style: none;
         }
 
-        .app-message {
+        .app-message,
+        .mensaje {
             border: 0;
             border-left: 4px solid #3b9cbe;
             border-radius: .65rem;
@@ -174,9 +261,39 @@
             background: #e9f5f8;
         }
 
+        .vacio {
+            padding: 2rem 1rem;
+            color: var(--parking-muted);
+            text-align: center;
+        }
+
+        .app-footer {
+            border-top: 1px solid var(--parking-border);
+            color: var(--parking-muted);
+            background: #fff;
+            text-align: center;
+            font-size: .85rem;
+        }
+
         @media (max-width: 1199.98px) {
             .app-navbar .navbar-nav {
                 padding-top: .65rem;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .app-main {
+                padding-right: 1rem;
+                padding-left: 1rem;
+            }
+
+            .panel {
+                padding: 1rem;
+                overflow-x: auto;
+            }
+
+            main table {
+                min-width: 32rem;
             }
         }
     </style>
@@ -184,18 +301,27 @@
 
 <body>
     <header class="app-navbar sticky-top">
-        <nav class="navbar navbar-expand-xl navbar-dark py-3">
+        <nav class="navbar navbar-expand-xl navbar-dark py-3"
+             aria-label="Navegación principal">
             <div class="container-fluid px-3 px-lg-4">
                 <div class="navbar-brand">
                     <span class="brand-mark" aria-hidden="true">P</span>
                     <span>SmartAccess Parking</span>
                 </div>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation"
-                    aria-controls="mainNavigation" aria-expanded="false" aria-label="Abrir navegación">
+
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#mainNavigation"
+                        aria-controls="mainNavigation"
+                        aria-expanded="false"
+                        aria-label="Abrir navegación">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse justify-content-end" id="mainNavigation">
-                    <nav class="navbar-nav gap-xl-1">
+
+                <div class="collapse navbar-collapse justify-content-end"
+                     id="mainNavigation">
+                    <div class="navbar-nav gap-xl-1">
                         {% if user.is_authenticated %}
                             {% if perms.usuarios.view_usuario %}
                                 <a class="nav-link" href="{% url 'usuarios:usuario_list' %}">Usuarios</a>
@@ -224,33 +350,46 @@
                             {% if perms.registros.view_intentoacceso %}
                                 <a class="nav-link" href="{% url 'registros:intento_list' %}">Intentos de acceso</a>
                             {% endif %}
-                            <form method="post" action="{% url 'logout' %}">
+
+                            <form method="post"
+                                  action="{% url 'usuarios:logout' %}"
+                                  class="d-flex align-items-center">
                                 {% csrf_token %}
-                                <button class="nav-link border-0 bg-transparent" type="submit">Cerrar sesión</button>
+                                <button class="nav-link border-0 bg-transparent"
+                                        type="submit">
+                                    Cerrar sesión
+                                </button>
                             </form>
                         {% else %}
-                            <a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a>
+                            <a class="nav-link" href="{% url 'usuarios:login' %}">Iniciar sesión</a>
                         {% endif %}
-                    </nav>
+                    </div>
                 </div>
             </div>
         </nav>
     </header>
 
     {% if messages %}
-    <div class="container app-main pt-4">
-        {% for message in messages %}
-        <div class="alert app-message shadow-sm mb-2" role="status">{{ message }}</div>
-        {% endfor %}
-    </div>
+        <div class="container app-main pt-4">
+            {% for message in messages %}
+                <div class="alert app-message shadow-sm mb-2" role="status">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
     {% endif %}
 
-    <main class="container app-main py-4 py-lg-5">
+    <main class="container app-main flex-grow-1 py-4 py-lg-5">
         {% block content %}{% endblock %}
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+
+    <footer class="app-footer py-3 px-3">
+        SmartAccess Parking · Gestión y control de estacionamientos
+    </footer>
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
 </body>
-
 </html>

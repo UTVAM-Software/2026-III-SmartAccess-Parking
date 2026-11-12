@@ -1,22 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ title }} | SmartAccess Parking{% endblock %}
 
 {% block content %}
 <section>
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <h2 class="page-title">{{ title }}</h2>
+        <div>
+            <h2 class="page-title mb-1">{{ title }}</h2>
+            <p class="text-secondary mb-0">
+                Administra y consulta los registros del sistema.
+            </p>
+        </div>
+
         {% if not permission_controlled or can_add %}
-            <a class="btn btn-primary rounded-pill px-4" href="{% url create_url %}">Crear registro</a>
+            <a class="btn btn-primary rounded-pill px-4" href="{% url create_url %}">
+                + Agregar registro
+            </a>
         {% endif %}
     </div>
 
     <div class="app-card">
-        <div class="table-responsive">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-4 pt-4">
+            <div>
+                <h3 class="h5 mb-1">Listado de {{ title|lower }}</h3>
+                <p class="text-secondary small mb-0">
+                    Consulta y administra la información registrada.
+                </p>
+            </div>
+        </div>
+
+        <div class="table-responsive mt-3">
             <table class="table app-table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th class="ps-4 py-3">Registro</th>
+                        <th class="ps-4 py-3">Información del registro</th>
                         {% if not permission_controlled or can_change or can_delete or can_exit %}
                             <th class="pe-4 py-3 text-end">Acciones</th>
                         {% endif %}
@@ -25,20 +42,34 @@
                 <tbody>
                     {% for item in objects %}
                         <tr>
-                            <td class="ps-4 py-3">{{ item }}</td>
+                            <td class="ps-4 py-3">
+                                <strong>{{ item }}</strong>
+                            </td>
+
                             {% if not permission_controlled or can_change or can_delete or can_exit %}
                                 <td class="pe-4 py-3">
-                                    <div class="d-flex justify-content-end gap-2">
+                                    <div class="d-flex flex-wrap justify-content-end gap-2">
                                         {% if not permission_controlled or can_change %}
-                                            <a class="btn btn-sm btn-light rounded-pill px-3" href="{% url update_url item.pk %}">Editar</a>
+                                            <a class="btn btn-sm btn-light rounded-pill px-3"
+                                               href="{% url update_url item.pk %}">
+                                                Editar
+                                            </a>
                                         {% endif %}
+
                                         {% if not permission_controlled or can_delete %}
-                                            <a class="btn btn-sm btn-outline-danger rounded-pill px-3" href="{% url delete_url item.pk %}">Eliminar</a>
+                                            <a class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                               href="{% url delete_url item.pk %}">
+                                                Eliminar
+                                            </a>
                                         {% endif %}
+
                                         {% if exit_url and can_exit and not item.hora_salida %}
                                             <form method="post" action="{% url exit_url item.pk %}">
                                                 {% csrf_token %}
-                                                <button class="btn btn-sm btn-outline-success rounded-pill px-3" type="submit">Registrar salida</button>
+                                                <button class="btn btn-sm btn-outline-success rounded-pill px-3"
+                                                        type="submit">
+                                                    Registrar salida
+                                                </button>
                                             </form>
                                         {% endif %}
                                     </div>
@@ -49,13 +80,32 @@
                         <tr>
                             <td class="py-4 text-center text-secondary"
                                 colspan="{% if not permission_controlled or can_change or can_delete or can_exit %}2{% else %}1{% endif %}">
-                                No hay registros.
+                                <div class="vacio">
+                                    <div class="fs-2 mb-2" aria-hidden="true">&#128203;</div>
+                                    <strong>No hay registros todavía.</strong>
+
+                                    {% if not permission_controlled or can_add %}
+                                        <p class="mt-2 mb-3">
+                                            Puedes comenzar agregando un nuevo registro.
+                                        </p>
+                                        <a class="btn btn-primary rounded-pill px-4"
+                                           href="{% url create_url %}">
+                                            + Agregar registro
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        {% if objects %}
+            <p class="text-secondary small px-4 py-3 mb-0">
+                Total de registros: {{ objects|length }}
+            </p>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
