@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section>
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <h2 class="page-title">{{ title }}</h2>
+        {% if can_add %}
+            <a class="btn btn-primary rounded-pill px-4" href="{% url create_url %}">Nuevo intento</a>
+        {% endif %}
+    </div>
+
+    <div class="app-card">
+        <div class="table-responsive">
+            <table class="table app-table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4 py-3">Fecha y hora</th>
+                        <th class="py-3">Placa</th>
+                        <th class="py-3">Resultado</th>
+                        <th class="py-3">Motivo</th>
+                        <th class="py-3">Acreditación</th>
+                        <th class="py-3">Operador</th>
+                        <th class="pe-4 py-3 text-end">Evidencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in objects %}
+                        <tr>
+                            <td class="ps-4 py-3">{{ item.fecha_hora|date:"Y-m-d H:i" }}</td>
+                            <td>{{ item.placa_capturada|default:"Sin placa" }}</td>
+                            <td>
+                                {% if item.resultado == "AUTORIZADO" %}
+                                    <span class="badge text-bg-success">{{ item.get_resultado_display }}</span>
+                                {% else %}
+                                    <span class="badge text-bg-danger">{{ item.get_resultado_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.motivo_rechazo|default:"Acceso autorizado" }}</td>
+                            <td>{{ item.acreditacion|default:"No vinculada" }}</td>
+                            <td>{{ item.operador }}</td>
+                            <td class="pe-4 text-end">
+                                {% if item.imagen %}
+                                    <a class="btn btn-sm btn-light" href="{% url 'registros:intento_imagen' item.pk %}">Ver fotografía</a>
+                                {% else %}
+                                    <span class="text-secondary">Sin imagen</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="py-4 text-center text-secondary" colspan="7">No hay intentos registrados.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -15,4 +15,9 @@ urlpatterns = [
     path("vehiculos/nuevo/", views.VehiculoCreateView.as_view(), name="vehiculo_create"),
     path("vehiculos/<str:pk>/editar/", views.VehiculoUpdateView.as_view(), name="vehiculo_update"),
     path("vehiculos/<str:pk>/eliminar/", views.VehiculoDeleteView.as_view(), name="vehiculo_delete"),
+
+    path("acreditaciones/", views.AcreditacionListView.as_view(), name="acreditacion_list"),
+    path("acreditaciones/nueva/", views.AcreditacionCreateView.as_view(), name="acreditacion_create"),
+    path("acreditaciones/<int:pk>/editar/", views.AcreditacionUpdateView.as_view(), name="acreditacion_update"),
+    path("acreditaciones/<int:pk>/eliminar/", views.AcreditacionDeleteView.as_view(), name="acreditacion_delete"),
 ]
