@@ -2,26 +2,106 @@
 
 Sistema web Django para administrar usuarios, vehículos, acreditaciones, cajones, sensores y registros de acceso.
 
+## Requisitos
+
+- Python **3.12, 3.13 o 3.14**; el proyecto se verificó con Python 3.12.6.
+- Django **6.1.1**, versión instalada en el entorno del proyecto y fijada en `requirements.txt`.
+- Pillow **12.3.0** estaba instalado en el entorno revisado; `requirements.txt` conserva el requisito `Pillow>=9.2`. Se utiliza para validar y procesar imágenes de los campos de imagen y para preparar imágenes del OCR.
+- Tesseract OCR es opcional y se instala por separado si se habilita la lectura OCR de placas. `pytesseract` es el conector de Python, no instala el motor.
+- PostgreSQL 15 o superior es opcional para despliegue; sus variables y el controlador se describen abajo.
+
 ## Instalación local en Windows
 
-Requiere una versión de Python compatible con Django 6.1.
+Desde la raíz del repositorio, crea y activa un entorno virtual:
 
 ```powershell
-py -m venv .venv
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
+```
+
+Instala las dependencias declaradas. Esto instala también Pillow y el conector `pytesseract`:
+
+```powershell
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+```
+
+Pillow ya está declarado en `requirements.txt`; si se necesita instalarlo por separado:
+
+```powershell
+python -m pip install "Pillow>=9.2"
+```
+
+## Diagnósticos de desarrollo
+
+La configuración de Pylint del repositorio activa el plugin `pylint_django` y usa `SmartAccessParking.settings`. Instala las herramientas de desarrollo con:
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m pylint manage.py SmartAccessParking common estacionamientos parking registros usuarios
+```
+
+En Linux o macOS, crea y activa el entorno con `python3.12 -m venv .venv` y `source .venv/bin/activate`; los demás comandos `python -m pip` y `python manage.py` son iguales.
+
+La configuración local de VS Code también especificaba el plugin `pylint_django` y el módulo Django `SmartAccessParking.settings`. Es una opción de editor, no una dependencia del sistema, y no está incluida en `requirements.txt`.
+
+## Variables de entorno
+
+Django lee la configuración directamente del entorno del proceso. En desarrollo, SQLite es la base predeterminada y `DEBUG` es `true`; se puede omitir `DJANGO_SECRET_KEY` localmente y Django generará una clave temporal al iniciar. `.env.example` es una plantilla sin secretos reales; Django no carga archivos `.env` automáticamente, así que define sus valores en el entorno del proceso o en la plataforma de despliegue. Para definir explícitamente las variables en PowerShell, antes de ejecutar comandos Django:
+
+```powershell
+$env:DJANGO_DEBUG = "true"
+$env:DJANGO_SECRET_KEY = (python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
+$env:DJANGO_ALLOWED_HOSTS = "localhost,127.0.0.1,testserver"
+```
+
+Cada integrante debe generar y mantener su propia `DJANGO_SECRET_KEY`; no se debe compartir ni subir al repositorio. En producción, configura una clave privada, `DJANGO_DEBUG=false` y `DJANGO_ALLOWED_HOSTS` con los nombres de host reales. Configura también `DJANGO_EMAIL_BACKEND`; el valor usado localmente por defecto es la consola de Django. Si se despliega detrás de un proxy HTTPS, revisa `DJANGO_CSRF_TRUSTED_ORIGINS` y `DJANGO_BEHIND_HTTPS_PROXY`.
+
+## Base de datos
+
+La conexión se configura sin editar `SmartAccessParking/settings.py` mediante estas variables:
+
+| Variable | Uso |
+| --- | --- |
+| `DJANGO_DB_ENGINE` | Motor Django; predeterminado `django.db.backends.sqlite3`. También acepta `sqlite`, `sqlite3`, `postgres` o `postgresql`. |
+| `DJANGO_DB_NAME` | Ruta del archivo SQLite o nombre de la base PostgreSQL. Si se omite con SQLite, se usa `db.sqlite3` en la raíz. |
+| `DJANGO_DB_USER` | Usuario PostgreSQL. |
+| `DJANGO_DB_PASSWORD` | Contraseña PostgreSQL. |
+| `DJANGO_DB_HOST` | Host PostgreSQL. |
+| `DJANGO_DB_PORT` | Puerto PostgreSQL. |
+
+El desarrollo local conserva SQLite sin configuración adicional. Para un servidor PostgreSQL, instala PostgreSQL y define en el entorno del servicio Django los valores proporcionados por quien administra ese servidor. Ejemplo en PowerShell (sustituye los marcadores por los datos reales; no guardes la contraseña en el repositorio):
+
+```powershell
+$env:DJANGO_DB_ENGINE = "django.db.backends.postgresql"
+$env:DJANGO_DB_NAME = "smartaccess"
+$env:DJANGO_DB_USER = "usuario_del_servidor"
+$env:DJANGO_DB_PASSWORD = "contraseña_del_servidor"
+$env:DJANGO_DB_HOST = "servidor.ejemplo"
+$env:DJANGO_DB_PORT = "5432"
+```
+
+`psycopg[binary]` está declarado en `requirements.txt` para que Django pueda conectarse a PostgreSQL. No se requiere al usar SQLite.
+
+## Migraciones y ejecución
+
+Una vez configuradas las variables de entorno, desde la raíz del proyecto:
+
+```powershell
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Abre `http://127.0.0.1:8000/`. Django usa SQLite de forma predeterminada. Las migraciones crean también los permisos estándar de cada modelo.
+`createsuperuser` es necesario para crear una cuenta administradora inicial y se ejecuta solo cuando corresponda. Abre `http://127.0.0.1:8000/` para acceder al sistema.
 
-Para habilitar la lectura OCR de placas en Windows, instala por separado el motor Tesseract siguiendo la [guía de instalación](https://tesseract-ocr.github.io/tessdoc/Installation.html). `pytesseract` es el conector de Python; no instala el motor. Si Tesseract no está en `PATH`, configura su ruta antes de iniciar Django:
+Para habilitar OCR de placas en Windows, instala por separado el [motor Tesseract](https://tesseract-ocr.github.io/tessdoc/Installation.html). Si no está en `PATH`, define la ruta antes de iniciar Django:
 
 ```powershell
 $env:TESSERACT_CMD = "C:\Program Files\Tesseract-OCR\tesseract.exe"
 ```
+
+Las migraciones preparan también los permisos estándar de cada modelo y los grupos de operación del sistema.
 
 ## Cuentas y permisos
 
@@ -58,6 +138,4 @@ Los grupos de aplicación se sincronizan con permisos de mínimo privilegio al e
 - Todavía no hay integración automática con cámara o sensores físicos; el personal de acceso carga la fotografía manualmente o escribe la placa.
 - Los datos de pago existentes son históricos; no se procesan cobros.
 
-## Configuración fuera de desarrollo
-
-Al desplegar, define `DJANGO_DEBUG=false`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` y `DJANGO_EMAIL_BACKEND`. Configura también `DJANGO_CSRF_TRUSTED_ORIGINS` si el sitio recibe solicitudes desde un dominio HTTPS. En modo de producción, el proyecto activa redirección HTTPS y cookies seguras de forma predeterminada.
+En producción, Django activa redirección HTTPS y cookies seguras por defecto cuando `DJANGO_DEBUG=false`; revisa esos valores con la configuración del proxy y del servidor antes del despliegue.

@@ -14,7 +14,7 @@ class PrivateDocumentStorage(FileSystemStorage):
         super().__init__()
 
     @property
-    def location(self):
+    def location(self):  # pylint: disable=invalid-overridden-method
         return str(settings.PRIVATE_MEDIA_ROOT)
 
     def url(self, name):

@@ -1,0 +1,38 @@
+[MAIN]
+load-plugins=pylint_django
+persistent=no
+
+[DJANGO FOREIGN KEYS REFERENCED BY STRINGS]
+django-settings-module=SmartAccessParking.settings
+
+[MESSAGES CONTROL]
+# Convention-only diagnostics incompatible with generated migrations, Django
+# naming, or the existing test indentation style.
+disable=
+    invalid-name,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    line-too-long,
+    missing-final-newline,
+    wrong-import-order,
+    import-outside-toplevel,
+    bad-indentation
+
+[DESIGN]
+# Django CBV inheritance and established service functions exceed defaults.
+# These checks remain active above the current project limits.
+max-parents=13
+max-args=10
+max-positional-arguments=10
+max-locals=26
+max-returns=9
+max-branches=14
+max-statements=75
+min-public-methods=1
+
+[SIMILARITIES]
+min-similarity-lines=10
+
+[VARIABLES]
+ignored-argument-names=^(_|ignored_|unused_|reason$|sender$)

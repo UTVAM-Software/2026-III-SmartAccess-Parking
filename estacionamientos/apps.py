@@ -5,4 +5,4 @@ class EstacionamientosConfig(AppConfig):
     name = 'estacionamientos'
 
     def ready(self):
-        from . import signals  # noqa: F401
+        from . import signals  # noqa: F401  # pylint: disable=import-outside-toplevel,unused-import

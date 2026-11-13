@@ -14,7 +14,7 @@ class PrivateCaptureStorage(FileSystemStorage):
         super().__init__()
 
     @property
-    def location(self):
+    def location(self):  # pylint: disable=invalid-overridden-method
         """Lee la ruta privada activa para admitir settings y temporales de test."""
         return str(settings.PRIVATE_MEDIA_ROOT)
 
