@@ -1,7 +1,9 @@
 venv/
+.venv/
 __pycache__/
 *.py[cod]
 db.sqlite3
 .env
 media/
 private_media/
+staticfiles/

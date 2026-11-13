@@ -19,8 +19,11 @@
                         <th class="ps-4 py-3">Fecha y hora</th>
                         <th class="py-3">Placa</th>
                         <th class="py-3">Resultado</th>
+                        <th class="py-3">Captura</th>
+                        <th class="py-3">Confianza OCR</th>
                         <th class="py-3">Motivo</th>
                         <th class="py-3">Acreditación</th>
+                        <th class="py-3">Plaza</th>
                         <th class="py-3">Operador</th>
                         <th class="pe-4 py-3 text-end">Evidencia</th>
                     </tr>
@@ -37,8 +40,11 @@
                                     <span class="badge text-bg-danger">{{ item.get_resultado_display }}</span>
                                 {% endif %}
                             </td>
+                            <td>{{ item.get_fuente_captura_display }}</td>
+                            <td>{{ item.confianza_ocr|default:"—" }}{% if item.confianza_ocr %}%{% endif %}</td>
                             <td>{{ item.motivo_rechazo|default:"Acceso autorizado" }}</td>
                             <td>{{ item.acreditacion|default:"No vinculada" }}</td>
+                            <td>{{ item.plaza|default:"Sin plaza" }}</td>
                             <td>{{ item.operador }}</td>
                             <td class="pe-4 text-end">
                                 {% if item.imagen %}
@@ -50,7 +56,7 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td class="py-4 text-center text-secondary" colspan="7">No hay intentos registrados.</td>
+                            <td class="py-4 text-center text-secondary" colspan="10">No hay intentos registrados.</td>
                         </tr>
                     {% endfor %}
                 </tbody>

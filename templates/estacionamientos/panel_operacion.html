@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Operación | SmartAccess Parking{% endblock %}
+
+{% block content %}
+<section class="dashboard-page">
+    <header class="dashboard-hero">
+        <div class="dashboard-hero-copy">
+            <span class="eyebrow eyebrow-light">CENTRO DE OPERACIÓN</span>
+            <h1>Todo bajo control.</h1>
+            <p>Revisa solicitudes, disponibilidad e incidencias de tus plazas desde un solo lugar.</p>
+            <div class="hero-location">
+                <span class="hero-location-dot" aria-hidden="true"></span>
+                {% if selected_plaza %}
+                    {{ selected_plaza.nombre }} · {{ selected_plaza.municipio }}, {{ selected_plaza.estado }}
+                {% else %}
+                    {{ plazas|length }} plaza{{ plazas|length|pluralize:"s" }} asignada{{ plazas|length|pluralize:"s" }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="dashboard-hero-side">
+            <div class="hero-emblem" aria-hidden="true">P</div>
+            <span class="hero-side-label">Solicitudes por revisar</span>
+            <strong class="hero-side-number">{{ pending_accreditation_count }}</strong>
+            {% if perms.usuarios.view_acreditacion %}
+                <a class="hero-side-link" href="{% url 'usuarios:acreditacion_list' %}">Abrir acreditaciones <span aria-hidden="true">↗</span></a>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if not plazas %}
+        <div class="alert alert-warning app-message" role="status">
+            Tu cuenta todavía no tiene plazas asignadas. Solicita a la administración del sistema que te asigne una.
+        </div>
+    {% endif %}
+
+    {% if plazas|length > 1 %}
+        <form method="get" class="plaza-filter-card">
+            <div>
+                <span class="eyebrow">VISTA DEL CENTRO</span>
+                <label class="form-label mb-0" for="plaza-filter">Filtrar por plaza</label>
+            </div>
+            <select class="form-select" id="plaza-filter" name="plaza">
+                <option value="">Todas mis plazas</option>
+                {% for plaza in plazas %}
+                    <option value="{{ plaza.pk }}"{% if selected_plaza.pk == plaza.pk %} selected{% endif %}>
+                        {{ plaza.nombre }} · {{ plaza.municipio }}, {{ plaza.estado }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-primary" type="submit">Aplicar filtro</button>
+        </form>
+    {% endif %}
+
+    <div class="metric-grid">
+        <article class="metric-card metric-blue">
+            <span class="metric-icon" aria-hidden="true">▦</span>
+            <span class="metric-label">Cajones registrados</span>
+            <strong class="metric-value">{{ space_count }}</strong>
+            <span class="metric-foot">en el ámbito seleccionado</span>
+        </article>
+        <article class="metric-card metric-green">
+            <span class="metric-icon" aria-hidden="true">✓</span>
+            <span class="metric-label">Disponibles</span>
+            <strong class="metric-value">{{ available_count }}</strong>
+            <span class="metric-foot">listos para recibir vehículos</span>
+        </article>
+        <article class="metric-card metric-amber">
+            <span class="metric-icon" aria-hidden="true">◷</span>
+            <span class="metric-label">No disponibles</span>
+            <strong class="metric-value">{{ occupied_count }}</strong>
+            <span class="metric-foot">ocupados o fuera de servicio</span>
+        </article>
+        <article class="metric-card metric-violet">
+            <span class="metric-icon" aria-hidden="true">✦</span>
+            <span class="metric-label">Acreditaciones pendientes</span>
+            <strong class="metric-value">{{ pending_accreditation_count }}</strong>
+            <span class="metric-foot">requieren revisión del equipo</span>
+        </article>
+        <article class="metric-card metric-rose">
+            <span class="metric-icon" aria-hidden="true">!</span>
+            <span class="metric-label">Incidencias activas</span>
+            <strong class="metric-value">{{ incident_count }}</strong>
+            <span class="metric-foot">abiertas en tus plazas</span>
+        </article>
+    </div>
+
+    <div class="dashboard-content-grid">
+        <section class="dashboard-panel dashboard-panel-wide">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">VALIDACIÓN DE PERSONAS</span>
+                    <h2>Acreditaciones por revisar</h2>
+                </div>
+                {% if perms.usuarios.view_acreditacion %}
+                    <a href="{% url 'usuarios:acreditacion_list' %}" class="btn btn-outline-primary btn-sm">Ver solicitudes <span aria-hidden="true">→</span></a>
+                {% endif %}
+            </div>
+            <div class="table-responsive">
+                <table class="table app-table align-middle mb-0">
+                    <thead><tr><th>Persona</th><th>Plaza</th><th>Documento</th><th class="text-end">Acción</th></tr></thead>
+                    <tbody>
+                        {% for accreditation in pending_accreditations %}
+                            <tr>
+                                <td><strong>{{ accreditation.usuario }}</strong></td>
+                                <td>
+                                    {% for plaza in accreditation.usuario.plazas.all %}
+                                        {% if not selected_plaza or plaza.pk == selected_plaza.pk %}
+                                            <span class="data-pill">{{ plaza.nombre }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if accreditation.documento_imagen and perms.usuarios.view_acreditacion %}
+                                        <a class="table-link" href="{% url 'usuarios:acreditacion_documento' accreditation.pk %}" target="_blank" rel="noopener">Abrir foto ↗</a>
+                                    {% else %}
+                                        <span class="text-secondary">Sin foto</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if perms.usuarios.change_acreditacion %}
+                                        <a href="{% url 'usuarios:acreditacion_update' accreditation.pk %}" class="btn btn-primary btn-sm">Revisar</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4"><div class="empty-state"><span aria-hidden="true">✓</span><strong>Todo al día</strong><p>No hay acreditaciones esperando revisión.</p></div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="dashboard-panel">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">SEGUIMIENTO</span>
+                    <h2>Incidencias recientes</h2>
+                </div>
+                {% if perms.registros.view_incidencia %}
+                    <a href="{% url 'registros:incidencia_list' %}" class="icon-link" aria-label="Ver todas las incidencias">↗</a>
+                {% endif %}
+            </div>
+            <div class="incident-list">
+                {% for incident in recent_incidents %}
+                    <article class="incident-row">
+                        <span class="incident-marker" aria-hidden="true">!</span>
+                        <div class="incident-copy">
+                            <strong>{{ incident.tipo }}</strong>
+                            <span>{{ incident.registro_uso.vehiculo.placa }} · {{ incident.registro_uso.estacionamiento.plaza.nombre }}</span>
+                        </div>
+                        <time>{{ incident.fecha_hora|date:"d/m H:i" }}</time>
+                    </article>
+                {% empty %}
+                    <div class="empty-state compact"><span aria-hidden="true">✓</span><strong>Sin incidencias activas</strong><p>La operación está tranquila.</p></div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if perms.registros.view_intentoacceso %}
+            <section class="dashboard-panel dashboard-panel-full">
+                <div class="panel-heading">
+                    <div>
+                        <span class="eyebrow">ACTIVIDAD DEL PERSONAL DE ACCESO</span>
+                        <h2>Revisiones de placa recientes</h2>
+                    </div>
+                    <span class="activity-count">{{ attempt_count }} {% if attempt_count == 1 %}revisión{% else %}revisiones{% endif %}</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table app-table align-middle mb-0">
+                        <thead><tr><th>Fecha</th><th>Placa</th><th>Resultado</th><th>Detalle</th><th>Personal</th><th>Plaza</th></tr></thead>
+                        <tbody>
+                            {% for attempt in recent_attempts %}
+                                <tr>
+                                    <td>{{ attempt.fecha_hora|date:"d/m/Y H:i" }}</td>
+                                    <td><strong class="plate-token">{{ attempt.placa_capturada|default:"Sin placa" }}</strong></td>
+                                    <td><span class="status-chip {% if attempt.resultado == 'AUTORIZADO' %}status-ok{% else %}status-no{% endif %}">{{ attempt.get_resultado_display }}</span></td>
+                                    <td>{{ attempt.motivo_rechazo|default:"Acreditación vigente" }}</td>
+                                    <td>{{ attempt.operador }}</td>
+                                    <td>{{ attempt.plaza.nombre }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="6"><div class="empty-state compact"><strong>Aún no hay revisiones</strong><p>Cuando el personal valide una placa, aparecerá aquí.</p></div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

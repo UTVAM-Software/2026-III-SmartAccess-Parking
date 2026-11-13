@@ -57,7 +57,11 @@ class RegistroUso(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"Registro {self.id_registro} - {self.vehiculo}"
+        salida = self.hora_salida or "En curso"
+        return (
+            f"Registro {self.id_registro} · {self.vehiculo.placa} · "
+            f"{self.fecha} {self.hora_entrada}–{salida}"
+        )
 
 
 class CapturaPlaca(models.Model):
@@ -89,7 +93,7 @@ class CapturaPlaca(models.Model):
         verbose_name_plural = 'capturas de placa'
 
     def __str__(self) -> str:
-        return f"Captura {self.id_captura} - {self.placa_detectada}"
+        return f"Captura {self.id_captura} · {self.placa_detectada} · {self.fecha_hora}"
 
 
 class Incidencia(models.Model):
@@ -111,7 +115,8 @@ class Incidencia(models.Model):
         verbose_name_plural = 'incidencias'
 
     def __str__(self) -> str:
-        return f"Incidencia {self.id_incidencia} - {self.tipo}"
+        estado = "activa" if self.estado else "resuelta"
+        return f"Incidencia {self.id_incidencia} · {self.tipo} · {estado}"
 
 
 class Boleto(models.Model):
@@ -181,8 +186,16 @@ class IntentoAcceso(models.Model):
 
     class FuenteCaptura(models.TextChoices):
         MANUAL = "MANUAL", "Captura manual"
+        OCR = "OCR", "Lectura OCR"
 
     id_intento = models.BigAutoField(primary_key=True)
+    plaza = models.ForeignKey(
+        "estacionamientos.Plaza",
+        on_delete=models.PROTECT,
+        related_name="intentos_acceso",
+        null=True,
+        blank=True,
+    )
     fecha_hora = models.DateTimeField(default=timezone.now)
     placa_capturada = models.CharField(max_length=20, blank=True, default="")
     imagen = models.ImageField(
@@ -197,6 +210,12 @@ class IntentoAcceso(models.Model):
         max_length=10,
         choices=FuenteCaptura.choices,
         default=FuenteCaptura.MANUAL,
+    )
+    confianza_ocr = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
     )
     operador = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -250,6 +269,12 @@ class IntentoAcceso(models.Model):
         db_table = "intento_acceso"
         verbose_name = "intento de acceso"
         verbose_name_plural = "intentos de acceso"
+        permissions = [
+            (
+                "validate_plate_access",
+                "Can validate whether a plate has a current disability accreditation",
+            ),
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=(
@@ -258,16 +283,16 @@ class IntentoAcceso(models.Model):
                 | (
                     Q(resultado="AUTORIZADO")
                     & Q(motivo_rechazo="")
+                    & ~Q(placa_capturada="")
+                    & Q(plaza__isnull=False)
                     & Q(usuario__isnull=False)
                     & Q(acreditacion__isnull=False)
                     & Q(vehiculo__isnull=False)
-                    & Q(estacionamiento__isnull=False)
-                    & Q(registro_uso__isnull=False)
-                    & Q(boleto__isnull=False)
                 ),
                 name="valid_access_attempt_result_relations",
             ),
         ]
 
     def __str__(self):
-        return f"Intento {self.id_intento}: {self.resultado}"
+        placa = self.placa_capturada or "Sin placa"
+        return f"{self.resultado} · {placa} · {self.fecha_hora:%Y-%m-%d %H:%M}"

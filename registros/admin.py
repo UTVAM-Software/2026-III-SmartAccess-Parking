@@ -4,22 +4,46 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
+from .forms import CapturaPlacaForm
+from common.admin import SuperuserOnlyModelAdmin
 from .models import Boleto, CapturaPlaca, Incidencia, IntentoAcceso, Pago, RegistroUso
 
 
 @admin.register(RegistroUso)
-class RegistroUsoAdmin(admin.ModelAdmin):
+class RegistroUsoAdmin(SuperuserOnlyModelAdmin):
     """Administra registros de uso con permisos estándar de Django."""
 
-    list_display = ("id_registro", "vehiculo", "estacionamiento",
-                    "fecha", "hora_entrada", "hora_salida", "estado_acreditacion")
+    list_display = (
+        "id_registro",
+        "vehiculo",
+        "estacionamiento",
+        "fecha",
+        "hora_entrada",
+        "hora_salida",
+        "estado_acreditacion",
+    )
     list_filter = ("estado_acreditacion", "fecha")
     search_fields = ("vehiculo__placa", "estado_acreditacion")
     list_select_related = ("vehiculo", "estacionamiento")
+    readonly_fields = (
+        "id_registro",
+        "vehiculo",
+        "estacionamiento",
+        "fecha",
+        "hora_entrada",
+        "hora_salida",
+        "autorizado",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(CapturaPlaca)
-class CapturaPlacaAdmin(admin.ModelAdmin):
+class CapturaPlacaAdmin(SuperuserOnlyModelAdmin):
     """Administra capturas de placa y su evidencia."""
 
     list_display = (
@@ -31,6 +55,7 @@ class CapturaPlacaAdmin(admin.ModelAdmin):
     )
     search_fields = ("placa_detectada", "registro_uso__vehiculo__placa")
     list_select_related = ("registro_uso", "registro_uso__vehiculo")
+    form = CapturaPlacaForm
 
     @admin.display(description="Evidencia")
     def imagen_privada(self, obj):
@@ -44,7 +69,7 @@ class CapturaPlacaAdmin(admin.ModelAdmin):
 
 
 @admin.register(Incidencia)
-class IncidenciaAdmin(admin.ModelAdmin):
+class IncidenciaAdmin(SuperuserOnlyModelAdmin):
     """Administra incidencias según los permisos estándar de Django."""
 
     list_display = ("id_incidencia", "registro_uso",
@@ -55,7 +80,7 @@ class IncidenciaAdmin(admin.ModelAdmin):
 
 
 @admin.register(Boleto)
-class BoletoAdmin(admin.ModelAdmin):
+class BoletoAdmin(SuperuserOnlyModelAdmin):
     """Consulta boletos; su creación ocurre solo en el flujo de acceso."""
 
     list_display = ("numero_boleto", "vehiculo", "registro_uso", "fecha_entrada", "fecha_salida", "pagado")
@@ -73,7 +98,7 @@ class BoletoAdmin(admin.ModelAdmin):
 
 
 @admin.register(Pago)
-class PagoAdmin(admin.ModelAdmin):
+class PagoAdmin(SuperuserOnlyModelAdmin):
     """Permite consultar únicamente pagos históricos sin operar cobros."""
 
     list_display = ("boleto", "fecha_pago", "monto_pagado", "metodo_pago")
@@ -91,7 +116,7 @@ class PagoAdmin(admin.ModelAdmin):
 
 
 @admin.register(IntentoAcceso)
-class IntentoAccesoAdmin(admin.ModelAdmin):
+class IntentoAccesoAdmin(SuperuserOnlyModelAdmin):
     """Consulta el historial inmutable de decisiones de acceso."""
 
     list_display = (
@@ -99,7 +124,10 @@ class IntentoAccesoAdmin(admin.ModelAdmin):
         "fecha_hora",
         "placa_capturada",
         "resultado",
+        "fuente_captura",
+        "confianza_ocr",
         "operador",
+        "plaza",
         "acreditacion",
         "imagen_privada",
     )
@@ -107,6 +135,7 @@ class IntentoAccesoAdmin(admin.ModelAdmin):
     search_fields = ("placa_capturada", "motivo_rechazo", "operador__username")
     list_select_related = (
         "operador",
+        "plaza",
         "usuario",
         "acreditacion",
         "vehiculo",

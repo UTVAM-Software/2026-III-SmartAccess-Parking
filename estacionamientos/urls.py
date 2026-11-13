@@ -6,6 +6,7 @@ from . import views
 app_name = "estacionamientos"
 
 urlpatterns = [
+    path("panel/", views.PanelOperacionView.as_view(), name="panel_operacion"),
     path("", views.EstacionamientoListView.as_view(), name="estacionamiento_list"),
     path("nuevo/", views.EstacionamientoCreateView.as_view(), name="estacionamiento_create"),
     path("<int:pk>/editar/", views.EstacionamientoUpdateView.as_view(), name="estacionamiento_update"),
