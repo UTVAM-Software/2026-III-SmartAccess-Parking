@@ -1,6 +1,9 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
+from common.views import managed_plazas
+from estacionamientos.models import Estacionamiento, Plaza
 from .models import CapturaPlaca, Incidencia, RegistroUso
 
 
@@ -29,6 +32,30 @@ class RegistroUsoForm(forms.ModelForm):
             "hora_salida": forms.TimeInput(attrs={"type": "time"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            plazas = managed_plazas(user)
+            self.fields["vehiculo"].queryset = self.fields["vehiculo"].queryset.filter(
+                usuario__plazas__in=plazas
+            ).distinct()
+            self.fields["estacionamiento"].queryset = Estacionamiento.objects.filter(
+                plaza__in=plazas
+            )
+        if self.instance.pk:
+            for field_name in (
+                "vehiculo",
+                "estacionamiento",
+                "fecha",
+                "hora_entrada",
+                "hora_salida",
+            ):
+                self.fields[field_name].disabled = True
+            self.fields["estado_acreditacion"].help_text = (
+                "Los datos de entrada y salida se conservan como historial."
+            )
+
 
 class CapturaPlacaForm(forms.ModelForm):
     class Meta:
@@ -48,6 +75,29 @@ class CapturaPlacaForm(forms.ModelForm):
         widgets = {
             "fecha_hora": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
+
+    def clean_placa_detectada(self):
+        return self.cleaned_data["placa_detectada"].strip().upper()
+
+    def clean_imagen(self):
+        image = self.cleaned_data.get("imagen")
+        if image and image.size > 5 * 1024 * 1024:
+            raise ValidationError("La fotografía no puede superar 5 MB.")
+        return image
+
+    def clean_fecha_hora(self):
+        captured_at = self.cleaned_data["fecha_hora"]
+        if captured_at > timezone.now():
+            raise ValidationError("La fecha de captura no puede estar en el futuro.")
+        return captured_at
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields["registro_uso"].queryset = RegistroUso.objects.filter(
+                estacionamiento__plaza__in=managed_plazas(user)
+            )
 
 
 class IncidenciaForm(forms.ModelForm):
@@ -71,23 +121,58 @@ class IncidenciaForm(forms.ModelForm):
             "fecha_hora": forms.DateTimeInput(attrs={"type": "datetime-local"}),
         }
 
-        
-
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields["registro_uso"].queryset = RegistroUso.objects.filter(
+                estacionamiento__plaza__in=managed_plazas(user)
+            )
 
 class IntentoAccesoForm(forms.Form):
-    """Entrada manual de evidencia; el resultado lo determina el servidor."""
+    """Registra una entrada manual o toma una placa de una fotografía."""
 
     placa_capturada = forms.CharField(
-        label="Placa capturada o ingresada",
+        label="Placa (opcional si adjuntas una fotografía)",
         max_length=20,
         required=False,
         strip=True,
-        help_text="Simulación manual: no se ejecuta OCR ni se usa una cámara.",
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Ej. ABC-1234",
+                "autocomplete": "off",
+                "autofocus": True,
+                "spellcheck": "false",
+            }
+        ),
+        help_text=(
+            "Si la dejas vacía, OCR propondrá una placa que deberás revisar y "
+            "confirmar. También puedes escribirla directamente."
+        ),
+    )
+    plaza = forms.ModelChoiceField(
+        label="Plaza donde se valida el acceso",
+        queryset=Plaza.objects.none(),
     )
     imagen = forms.ImageField(
-        label="Fotografía de la placa (opcional)",
+        label="Fotografía del vehículo o su placa (opcional)",
         required=False,
+        widget=forms.ClearableFileInput(
+            attrs={"accept": "image/*", "capture": "environment"}
+        ),
+        help_text=(
+            "Puedes tomar una foto con el celular o elegir un archivo. Para que "
+            "el sistema lea la placa, déjala vacía y confirma la propuesta."
+        ),
     )
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields["plaza"].queryset = managed_plazas(user)
+            if self.fields["plaza"].queryset.count() == 1:
+                self.fields["plaza"].initial = self.fields["plaza"].queryset.first()
 
     def clean_placa_capturada(self):
         return self.cleaned_data["placa_capturada"].strip().upper()

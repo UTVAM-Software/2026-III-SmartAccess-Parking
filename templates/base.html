@@ -1,3 +1,4 @@
+{% load static %}
 <!doctype html>
 <html lang="es">
 <head>
@@ -11,292 +12,7 @@
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
         crossorigin="anonymous">
 
-    <style>
-        :root {
-            --parking-ink: #183247;
-            --parking-navy: #102a43;
-            --parking-blue: #0b6f9f;
-            --parking-teal: #2fc6b5;
-            --parking-muted: #718293;
-            --parking-canvas: #f3f7fa;
-            --parking-border: #e2eaf0;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            color: var(--parking-ink);
-            background:
-                radial-gradient(circle at 88% 0%, #e4f3f7 0, transparent 28rem),
-                var(--parking-canvas);
-            font-family: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-        }
-
-        .app-navbar {
-            background: linear-gradient(112deg, #102a43 0%, #123c58 100%);
-            box-shadow: 0 8px 28px rgba(16, 42, 67, .14);
-        }
-
-        .app-navbar .navbar-brand {
-            display: inline-flex;
-            align-items: center;
-            gap: .75rem;
-            color: #fff;
-            font-size: 1.02rem;
-            font-weight: 700;
-            letter-spacing: -.02em;
-        }
-
-        .brand-mark {
-            display: grid;
-            width: 2.5rem;
-            height: 2.5rem;
-            place-items: center;
-            border: 1px solid rgba(255, 255, 255, .24);
-            border-radius: .8rem;
-            color: #073a4c;
-            background: linear-gradient(145deg, #5ce0c3, #9df0d7);
-            font-size: 1.1rem;
-            font-weight: 800;
-            box-shadow: 0 5px 16px rgba(47, 198, 181, .2);
-        }
-
-        .app-navbar .nav-link {
-            padding: .58rem .78rem;
-            border-radius: .65rem;
-            color: rgba(255, 255, 255, .76);
-            font-size: .91rem;
-            font-weight: 500;
-            transition: background-color .18s ease, color .18s ease;
-        }
-
-        .app-navbar .nav-link:hover,
-        .app-navbar .nav-link:focus-visible {
-            color: #fff;
-            background: rgba(255, 255, 255, .1);
-        }
-
-        .app-navbar .navbar-toggler {
-            border-color: rgba(255, 255, 255, .28);
-        }
-
-        .app-main {
-            width: 100%;
-            max-width: 1240px;
-        }
-
-        .page-title,
-        .titulo-pagina h2,
-        main > h2 {
-            margin: 0 0 1.25rem;
-            color: var(--parking-ink);
-            font-size: clamp(1.65rem, 2.5vw, 2.25rem);
-            font-weight: 750;
-            letter-spacing: -.04em;
-        }
-
-        .app-card,
-        .panel {
-            overflow: hidden;
-            border: 1px solid var(--parking-border);
-            border-radius: 1.15rem;
-            background: #fff;
-            box-shadow: 0 12px 34px rgba(29, 58, 79, .06);
-        }
-
-        .app-table,
-        main table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #fff;
-        }
-
-        .app-table thead th,
-        main table th {
-            padding: .85rem;
-            border-bottom: 1px solid var(--parking-border);
-            color: #667b8d;
-            background: #f7f9fb;
-            font-size: .76rem;
-            font-weight: 700;
-            letter-spacing: .055em;
-            text-align: left;
-            text-transform: uppercase;
-        }
-
-        .app-table tbody td,
-        main table td {
-            padding: .85rem;
-            border-bottom: 1px solid #edf1f4;
-            color: #29465b;
-        }
-
-        .app-table tbody tr:hover td,
-        main table tbody tr:hover td {
-            background: #f7f9fb;
-        }
-
-        main table tr:last-child td {
-            border-bottom: 0;
-        }
-
-        .acciones {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: .75rem;
-            margin-bottom: 1.25rem;
-        }
-
-        main a.boton,
-        main button:not(.nav-link),
-        main input[type="submit"] {
-            display: inline-block;
-            padding: .68rem 1rem;
-            border: 0;
-            border-radius: .65rem;
-            color: #fff;
-            background: var(--parking-blue);
-            font: inherit;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: background-color .18s ease, transform .18s ease;
-        }
-
-        main a.boton:hover,
-        main button:not(.nav-link):hover,
-        main input[type="submit"]:hover {
-            color: #fff;
-            background: var(--parking-navy);
-            transform: translateY(-1px);
-        }
-
-        .django-form p,
-        main form p {
-            margin-bottom: 1.15rem;
-        }
-
-        .django-form p label,
-        main form p label {
-            display: block;
-            margin-bottom: .4rem;
-            color: #344f63;
-            font-size: .9rem;
-            font-weight: 650;
-        }
-
-        .django-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
-        .django-form select,
-        .django-form textarea,
-        main form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]),
-        main form select,
-        main form textarea {
-            display: block;
-            width: 100%;
-            min-height: 2.8rem;
-            padding: .62rem .82rem;
-            border: 1px solid #d6e1e9;
-            border-radius: .7rem;
-            color: var(--parking-ink);
-            background-color: #fff;
-            font: inherit;
-            transition: border-color .18s ease, box-shadow .18s ease;
-        }
-
-        .django-form textarea,
-        main form textarea {
-            min-height: 7rem;
-        }
-
-        .django-form input:focus,
-        .django-form select:focus,
-        .django-form textarea:focus,
-        main form input:focus,
-        main form select:focus,
-        main form textarea:focus {
-            border-color: #69b8c9;
-            outline: 0;
-            box-shadow: 0 0 0 .22rem rgba(11, 111, 159, .12);
-        }
-
-        .django-form input[type="checkbox"],
-        .django-form input[type="radio"],
-        main form input[type="checkbox"],
-        main form input[type="radio"] {
-            accent-color: var(--parking-blue);
-        }
-
-        .django-form .helptext,
-        main form .helptext {
-            display: block;
-            margin-top: .35rem;
-            color: var(--parking-muted);
-            font-size: .82rem;
-        }
-
-        .django-form .errorlist,
-        main form .errorlist {
-            margin: .35rem 0 0;
-            padding: 0;
-            color: #b42318;
-            font-size: .85rem;
-            list-style: none;
-        }
-
-        .app-message,
-        .mensaje {
-            border: 0;
-            border-left: 4px solid #3b9cbe;
-            border-radius: .65rem;
-            color: #244a60;
-            background: #e9f5f8;
-        }
-
-        .vacio {
-            padding: 2rem 1rem;
-            color: var(--parking-muted);
-            text-align: center;
-        }
-
-        .app-footer {
-            border-top: 1px solid var(--parking-border);
-            color: var(--parking-muted);
-            background: #fff;
-            text-align: center;
-            font-size: .85rem;
-        }
-
-        @media (max-width: 1199.98px) {
-            .app-navbar .navbar-nav {
-                padding-top: .65rem;
-            }
-        }
-
-        @media (max-width: 700px) {
-            .app-main {
-                padding-right: 1rem;
-                padding-left: 1rem;
-            }
-
-            .panel {
-                padding: 1rem;
-                overflow-x: auto;
-            }
-
-            main table {
-                min-width: 32rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=4">
 </head>
 
 <body>
@@ -304,10 +20,10 @@
         <nav class="navbar navbar-expand-xl navbar-dark py-3"
              aria-label="Navegación principal">
             <div class="container-fluid px-3 px-lg-4">
-                <div class="navbar-brand">
+                <a class="navbar-brand text-decoration-none" href="{% url 'home' %}">
                     <span class="brand-mark" aria-hidden="true">P</span>
                     <span>SmartAccess Parking</span>
-                </div>
+                </a>
 
                 <button class="navbar-toggler"
                         type="button"
@@ -321,38 +37,32 @@
 
                 <div class="collapse navbar-collapse justify-content-end"
                      id="mainNavigation">
-                    <div class="navbar-nav gap-xl-1">
+                    <div class="navbar-nav app-nav-links gap-xl-1">
                         {% if user.is_authenticated %}
-                            {% if perms.usuarios.view_usuario %}
-                                <a class="nav-link" href="{% url 'usuarios:usuario_list' %}">Usuarios</a>
-                            {% endif %}
-                            {% if perms.usuarios.view_vehiculo %}
-                                <a class="nav-link" href="{% url 'usuarios:vehiculo_list' %}">Vehículos</a>
-                            {% endif %}
-                            {% if perms.usuarios.view_acreditacion %}
-                                <a class="nav-link" href="{% url 'usuarios:acreditacion_list' %}">Acreditaciones</a>
-                            {% endif %}
-                            {% if perms.estacionamientos.view_estacionamiento %}
-                                <a class="nav-link" href="{% url 'estacionamientos:estacionamiento_list' %}">Estacionamientos</a>
-                            {% endif %}
-                            {% if perms.estacionamientos.view_sensor %}
-                                <a class="nav-link" href="{% url 'estacionamientos:sensor_list' %}">Sensores</a>
-                            {% endif %}
-                            {% if perms.registros.view_registrouso %}
-                                <a class="nav-link" href="{% url 'registros:registro_list' %}">Registros de uso</a>
-                            {% endif %}
-                            {% if perms.registros.view_capturaplaca %}
-                                <a class="nav-link" href="{% url 'registros:captura_list' %}">Capturas de placa</a>
-                            {% endif %}
-                            {% if perms.registros.view_incidencia %}
-                                <a class="nav-link" href="{% url 'registros:incidencia_list' %}">Incidencias</a>
-                            {% endif %}
-                            {% if perms.registros.view_intentoacceso %}
-                                <a class="nav-link" href="{% url 'registros:intento_list' %}">Intentos de acceso</a>
+                            {% if user.is_superuser %}
+                                <a class="nav-link" href="{% url 'admin:index' %}">Administración global</a>
+                            {% elif perms.registros.validate_plate_access %}
+                                <a class="nav-link" href="{% url 'registros:intento_create' %}">Validar placa</a>
+                            {% elif perms.estacionamientos.view_operational_dashboard %}
+                                <a class="nav-link" href="{% url 'estacionamientos:panel_operacion' %}">Resumen</a>
+                                {% if perms.usuarios.view_usuario %}
+                                    <a class="nav-link" href="{% url 'usuarios:usuario_list' %}">Personas</a>
+                                {% endif %}
+                                {% if perms.usuarios.view_acreditacion %}
+                                    <a class="nav-link" href="{% url 'usuarios:acreditacion_list' %}">Acreditaciones</a>
+                                {% endif %}
+                                {% if perms.registros.view_registrouso %}
+                                    <a class="nav-link" href="{% url 'registros:registro_list' %}">Registros</a>
+                                {% endif %}
+                                {% if perms.registros.view_incidencia %}
+                                    <a class="nav-link" href="{% url 'registros:incidencia_list' %}">Incidencias</a>
+                                {% endif %}
+                            {% elif user.perfil_estacionamiento %}
+                                <a class="nav-link" href="{% url 'usuarios:mi_cuenta' %}">Mi cuenta</a>
                             {% endif %}
 
                             <form method="post"
-                                  action="{% url 'usuarios:logout' %}"
+                                  action="{% url 'logout' %}"
                                   class="d-flex align-items-center">
                                 {% csrf_token %}
                                 <button class="nav-link border-0 bg-transparent"
@@ -361,7 +71,8 @@
                                 </button>
                             </form>
                         {% else %}
-                            <a class="nav-link" href="{% url 'usuarios:login' %}">Iniciar sesión</a>
+                            <a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a>
+                            <a class="nav-link" href="{% url 'usuarios:registro_publico' %}">Crear cuenta</a>
                         {% endif %}
                     </div>
                 </div>
@@ -370,9 +81,10 @@
     </header>
 
     {% if messages %}
-        <div class="container app-main pt-4">
+        <div class="app-message-stack">
             {% for message in messages %}
-                <div class="alert app-message shadow-sm mb-2" role="status">
+                <div class="alert app-message shadow-sm mb-2{% if message.level_tag == 'error' %} alert-danger{% elif message.level_tag == 'success' %} alert-success{% elif message.level_tag == 'warning' %} alert-warning{% else %} alert-info{% endif %}"
+                     role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
@@ -391,5 +103,10 @@
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
+    <script>
+        window.addEventListener("pageshow", (event) => {
+            if (event.persisted) window.location.reload();
+        });
+    </script>
 </body>
 </html>

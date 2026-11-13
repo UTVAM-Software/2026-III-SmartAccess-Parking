@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Actualiza tu formulario | SmartAccess Parking{% endblock %}
+
+{% block content %}
+<section class="csrf-failure-page">
+    <div class="csrf-failure-card">
+        <span class="csrf-failure-icon" aria-hidden="true">↻</span>
+        <span class="eyebrow">SESIÓN ACTUALIZADA</span>
+        <h1>Actualiza este formulario</h1>
+        <p>La sesión cambió después de abrir esta página. Recarga el formulario y vuelve a enviar la información.</p>
+        <div class="csrf-failure-actions">
+            <a class="btn btn-primary" href="{{ request.path }}">Recargar formulario</a>
+            <a class="btn btn-light" href="{% url 'home' %}">Ir al inicio</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

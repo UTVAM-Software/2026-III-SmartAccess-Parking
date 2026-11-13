@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Crear cuenta | SmartAccess Parking{% endblock %}
+
+{% block content %}
+<section class="mx-auto form-card">
+    <div class="app-card p-4 p-md-5">
+        <h1 class="page-title mb-2">Crea tu cuenta</h1>
+        <p class="text-secondary mb-4">
+            Registra tu perfil, una primera placa y una foto de tu documento de acreditación.
+            Después podrás vincular hasta tres vehículos desde tu cuenta. La solicitud quedará pendiente hasta que la revise el personal de la plaza.
+        </p>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post"
+              enctype="multipart/form-data"
+              class="django-form"
+              data-plazas-url="{% url 'usuarios:plazas_disponibles' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary rounded-pill px-4" type="submit">
+                Crear cuenta y solicitar revisión
+            </button>
+            <a class="btn btn-light rounded-pill px-4" href="{% url 'login' %}">
+                Ya tengo cuenta
+            </a>
+        </form>
+    </div>
+</section>
+
+<script>
+    (() => {
+        const form = document.querySelector("form[data-plazas-url]");
+        const state = document.getElementById("id_estado");
+        const municipality = document.getElementById("id_municipio");
+        const plazas = document.getElementById("id_plazas");
+        if (!form || !state || !municipality || !plazas) return;
+
+        function updateMunicipalityAvailability() {
+            municipality.disabled = !state.value;
+            if (!state.value) municipality.value = "";
+        }
+
+        async function refreshPlazas() {
+            const selected = new Set(
+                Array.from(plazas.selectedOptions, (option) => option.value)
+            );
+            const query = new URLSearchParams({
+                estado: state.value,
+                municipio: municipality.value,
+            });
+            const response = await fetch(`${form.dataset.plazasUrl}?${query}`);
+            const data = await response.json();
+            plazas.replaceChildren();
+            for (const plaza of data.plazas) {
+                const option = document.createElement("option");
+                option.value = plaza.id;
+                option.textContent = plaza.nombre;
+                option.selected = selected.has(String(plaza.id));
+                plazas.append(option);
+            }
+            plazas.disabled = data.plazas.length === 0;
+        }
+
+        state.addEventListener("change", () => {
+            updateMunicipalityAvailability();
+            refreshPlazas();
+        });
+        municipality.addEventListener("change", refreshPlazas);
+        updateMunicipalityAvailability();
+        refreshPlazas();
+    })();
+</script>
+{% endblock %}

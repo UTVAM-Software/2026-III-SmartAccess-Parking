@@ -27,7 +27,7 @@ urlpatterns = [
     path("incidencias/<int:pk>/editar/", views.IncidenciaUpdateView.as_view(), name="incidencia_update"),
     path("incidencias/<int:pk>/eliminar/", views.IncidenciaDeleteView.as_view(), name="incidencia_delete"),
 
-    # Intentos manuales; OCR y cámara no están integrados.
+    # El operador valida la placa manualmente o confirma la propuesta de OCR.
     path("intentos/", views.IntentoAccesoListView.as_view(), name="intento_list"),
     path("intentos/nuevo/", views.IntentoAccesoCreateView.as_view(), name="intento_create"),
     path("intentos/<int:pk>/imagen/", views.IntentoAccesoImagenView.as_view(), name="intento_imagen"),

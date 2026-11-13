@@ -3,7 +3,7 @@
 {% block title %}{{ title }} | SmartAccess Parking{% endblock %}
 
 {% block content %}
-<section class="mx-auto" style="max-width: 800px;">
+<section class="mx-auto form-card">
     <div class="app-card p-4 p-md-5">
         <h2 class="page-title mb-2">{{ title }}</h2>
         <p class="text-secondary mb-4">
@@ -16,6 +16,25 @@
                 Los campos se validarán antes de guardar.
             </p>
         </div>
+
+        {% if accreditation_document_url %}
+            <div class="alert alert-info" role="status">
+                <strong>Documento de acreditación:</strong>
+                <a href="{{ accreditation_document_url }}" target="_blank" rel="noopener">
+                    Ver fotografía privada
+                </a>
+            </div>
+        {% elif legacy_document_reference %}
+            <p class="text-secondary">Referencia anterior: {{ legacy_document_reference }}</p>
+        {% endif %}
+        {% if review_plazas %}
+            <p class="text-secondary">
+                Solicitud para:
+                {% for plaza in review_plazas %}
+                    <span class="badge text-bg-light">{{ plaza.nombre }}</span>
+                {% endfor %}
+            </p>
+        {% endif %}
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}

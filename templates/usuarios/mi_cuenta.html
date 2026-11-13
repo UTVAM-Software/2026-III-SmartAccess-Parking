@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Mi espacio | SmartAccess Parking{% endblock %}
+
+{% block content %}
+<section class="resident-page">
+    <header class="resident-hero">
+        <div>
+            <span class="eyebrow eyebrow-light">TU ESPACIO SMARTACCESS</span>
+            <h1>Hola, {{ profile.nombre }}.</h1>
+            <p>Administra tus vehículos y consulta el estado de tu acreditación.</p>
+        </div>
+        <div class="resident-hero-mark" aria-hidden="true">{{ profile.nombre|first|upper }}</div>
+    </header>
+
+    <div class="resident-status-card {% if can_use_accessible_parking %}resident-status-approved{% elif profile.estado and accreditation and not accreditation.estado %}resident-status-pending{% else %}resident-status-neutral{% endif %}">
+        <span class="status-symbol" aria-hidden="true">
+            {% if can_use_accessible_parking %}✓{% elif accreditation and not accreditation.estado %}◷{% else %}!{% endif %}
+        </span>
+        <div class="resident-status-copy">
+            <span class="eyebrow">ESTADO DE TU SOLICITUD</span>
+            {% if not profile.estado %}
+                <h2>Cuenta inactiva</h2>
+                <p>Contacta al administrador de tu plaza para recibir ayuda.</p>
+            {% elif not accreditation or not accreditation.estado %}
+                <h2>Acreditación en revisión</h2>
+                <p>El personal de tu plaza revisará el documento. El registro por sí solo todavía no autoriza el uso.</p>
+            {% elif not accreditation.esta_vigente %}
+                <h2>Acreditación fuera de vigencia</h2>
+                <p>La aprobación venció o aún no inicia. Contacta al administrador de tu plaza.</p>
+            {% else %}
+                <h2>Acreditación vigente</h2>
+                <p>Las placas de tus vehículos registrados podrán validarse en las plazas que seleccionaste.</p>
+            {% endif %}
+        </div>
+        {% if accreditation and accreditation.fecha_vencimiento %}
+            <div class="status-expiry"><span>Vigencia hasta</span><strong>{{ accreditation.fecha_vencimiento|date:"d M Y" }}</strong></div>
+        {% endif %}
+    </div>
+
+    <div class="resident-content-grid">
+        <section class="resident-panel resident-panel-vehicles">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">PLACAS VINCULADAS</span>
+                    <h2>Mis vehículos</h2>
+                </div>
+                <span class="vehicle-counter">{{ vehicle_count }} <span>/ 3</span></span>
+            </div>
+            <div class="vehicle-progress" role="progressbar" aria-label="Vehículos registrados" aria-valuenow="{{ vehicle_count }}" aria-valuemin="0" aria-valuemax="3">
+                <span class="vehicle-progress-fill count-{{ vehicle_count }}"></span>
+            </div>
+            {% if vehicles %}
+                <div class="vehicle-list">
+                    {% for vehicle in vehicles %}
+                        <article class="vehicle-card">
+                            <div class="vehicle-symbol" aria-hidden="true">▰</div>
+                            <div class="vehicle-description">
+                                <span class="eyebrow">VEHÍCULO {{ forloop.counter }}</span>
+                                <strong class="plate-token">{{ vehicle.placa }}</strong>
+                                <span>{{ vehicle.marca|default:"Marca no indicada" }} · {{ vehicle.modelo }}{% if vehicle.color %} · {{ vehicle.color }}{% endif %}</span>
+                            </div>
+                            {% if vehicle.estado %}<span class="status-chip status-ok">Activo</span>{% else %}<span class="status-chip status-no">Inactivo</span>{% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state"><span aria-hidden="true">▰</span><strong>Aún no hay vehículos</strong><p>Agrega una placa para que el personal pueda validar tu acreditación.</p></div>
+            {% endif %}
+            {% if can_add_vehicle %}
+                <a class="btn btn-primary resident-add-button" href="{% url 'usuarios:mi_vehiculo_create' %}">＋ Agregar vehículo <span class="button-caption">Puedes registrar hasta 3 placas</span></a>
+            {% else %}
+                <div class="vehicle-limit-note">Ya registraste el máximo de 3 vehículos.</div>
+            {% endif %}
+        </section>
+
+        <aside class="resident-side-column">
+            <section class="resident-panel">
+                <div class="panel-heading panel-heading-stack">
+                    <div><span class="eyebrow">LUGARES SOLICITADOS</span><h2>Mis plazas</h2></div>
+                </div>
+                {% if plazas %}
+                    <div class="location-list">
+                        {% for plaza in plazas %}
+                            <div class="location-row"><span class="location-pin" aria-hidden="true">⌖</span><div><strong>{{ plaza.nombre }}</strong><span>{{ plaza.municipio }}, {{ plaza.estado }}</span></div><span class="location-check" aria-label="Plaza activa">✓</span></div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-secondary mb-0">No tienes plazas activas seleccionadas.</p>
+                {% endif %}
+            </section>
+
+            <section class="resident-panel document-panel">
+                <span class="document-icon" aria-hidden="true">▤</span>
+                <span class="eyebrow">DOCUMENTO DE ACREDITACIÓN</span>
+                <h2>Tu comprobante</h2>
+                {% if accreditation.documento_imagen %}
+                    <p>La foto se guarda de forma privada y solo tú y el personal asignado pueden revisarla.</p>
+                    <a class="table-link" href="{% url 'usuarios:acreditacion_documento' accreditation.pk %}">Ver documento enviado ↗</a>
+                {% elif accreditation.documento %}
+                    <p>Referencia registrada: {{ accreditation.documento }}</p>
+                {% else %}
+                    <p>No hay documento adjunto en tu solicitud.</p>
+                {% endif %}
+            </section>
+        </aside>
+    </div>
+</section>
+{% endblock %}

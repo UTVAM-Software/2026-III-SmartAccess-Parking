@@ -1,44 +1,45 @@
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import ProtectedError
-from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.db.models import Prefetch
+from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
+from common.views import (
+    LoginPermissionMixin,
+    ManagedPlazaFormMixin,
+    ModelPermissionMixin,
+    ProtectedDeleteView,
+    managed_plazas,
+)
 from .forms import EstacionamientoForm, SensorForm
-from .models import Estacionamiento, Sensor
+from .models import Estacionamiento, Plaza, Sensor
+from .services import synchronize_availability
 
 
-class AccesoEstacionamientosMixin(LoginRequiredMixin, PermissionRequiredMixin):
+class AccesoEstacionamientosMixin(ModelPermissionMixin):
     """Exige autenticación y permisos CRUD para cajones y sensores."""
 
-    login_url = reverse_lazy("login")
 
-    def get_context_data(self, **kwargs):
-        """Expone permisos de CRUD para controlar las acciones de lista."""
-        context = super().get_context_data(**kwargs)
-        options = self.model._meta
-        for action in ("add", "change", "delete"):
-            context[f"can_{action}"] = self.request.user.has_perm(
-                f"{options.app_label}.{action}_{options.model_name}"
-            )
-        context["permission_controlled"] = True
-        return context
+class SynchronizeSpaceAfterSaveMixin:
+    """Recalcula disponibilidad al guardar la configuración del cajón."""
 
-
-class EliminacionProtegidaView(DeleteView):
     def form_valid(self, form):
-        try:
-            self.object.delete()
-        except ProtectedError:
-            messages.error(
-                self.request,
-                "No se puede eliminar porque hay registros relacionados.",
-            )
-        else:
-            messages.success(self.request, "Registro eliminado correctamente.")
+        response = super().form_valid(form)
+        synchronize_availability(self.object.pk)
+        self.object.refresh_from_db(fields=("estado",))
+        return response
 
-        return HttpResponseRedirect(self.get_success_url())
+
+class SynchronizeSensorAfterSaveMixin:
+    """Recalcula los cajones al crear, mover o editar un sensor."""
+
+    def form_valid(self, form):
+        old_space_id = (
+            self.object.estacionamiento_id if getattr(self, "object", None) else None
+        )
+        response = super().form_valid(form)
+        space_ids = {old_space_id, self.object.estacionamiento_id} - {None}
+        for space_id in space_ids:
+            synchronize_availability(space_id)
+        return response
 
 
 class EstacionamientoListView(AccesoEstacionamientosMixin, ListView):
@@ -47,6 +48,7 @@ class EstacionamientoListView(AccesoEstacionamientosMixin, ListView):
     permission_required = "estacionamientos.view_estacionamiento"
     template_name = "crud/list.html"
     context_object_name = "objects"
+    paginate_by = 25
     extra_context = {
         "title": "Estacionamientos",
         "create_url": "estacionamientos:estacionamiento_create",
@@ -55,7 +57,12 @@ class EstacionamientoListView(AccesoEstacionamientosMixin, ListView):
     }
 
 
-class EstacionamientoCreateView(AccesoEstacionamientosMixin, CreateView):
+class EstacionamientoCreateView(
+    SynchronizeSpaceAfterSaveMixin,
+    ManagedPlazaFormMixin,
+    AccesoEstacionamientosMixin,
+    CreateView,
+):
     """Crea cajones con el permiso de alta del modelo."""
     model = Estacionamiento
     permission_required = "estacionamientos.add_estacionamiento"
@@ -65,7 +72,12 @@ class EstacionamientoCreateView(AccesoEstacionamientosMixin, CreateView):
     extra_context = {"title": "Crear estacionamiento"}
 
 
-class EstacionamientoUpdateView(AccesoEstacionamientosMixin, UpdateView):
+class EstacionamientoUpdateView(
+    SynchronizeSpaceAfterSaveMixin,
+    ManagedPlazaFormMixin,
+    AccesoEstacionamientosMixin,
+    UpdateView,
+):
     """Edita cajones con el permiso de cambio del modelo."""
     model = Estacionamiento
     permission_required = "estacionamientos.change_estacionamiento"
@@ -75,7 +87,7 @@ class EstacionamientoUpdateView(AccesoEstacionamientosMixin, UpdateView):
     extra_context = {"title": "Editar estacionamiento"}
 
 
-class EstacionamientoDeleteView(AccesoEstacionamientosMixin, EliminacionProtegidaView):
+class EstacionamientoDeleteView(AccesoEstacionamientosMixin, ProtectedDeleteView):
     """Elimina cajones con el permiso de borrado del modelo."""
     model = Estacionamiento
     permission_required = "estacionamientos.delete_estacionamiento"
@@ -90,6 +102,8 @@ class SensorListView(AccesoEstacionamientosMixin, ListView):
     permission_required = "estacionamientos.view_sensor"
     template_name = "crud/list.html"
     context_object_name = "objects"
+    paginate_by = 25
+    queryset = Sensor.objects.select_related("estacionamiento")
     extra_context = {
         "title": "Sensores",
         "create_url": "estacionamientos:sensor_create",
@@ -98,7 +112,12 @@ class SensorListView(AccesoEstacionamientosMixin, ListView):
     }
 
 
-class SensorCreateView(AccesoEstacionamientosMixin, CreateView):
+class SensorCreateView(
+    SynchronizeSensorAfterSaveMixin,
+    ManagedPlazaFormMixin,
+    AccesoEstacionamientosMixin,
+    CreateView,
+):
     """Crea sensores con el permiso de alta del modelo."""
     model = Sensor
     permission_required = "estacionamientos.add_sensor"
@@ -108,7 +127,12 @@ class SensorCreateView(AccesoEstacionamientosMixin, CreateView):
     extra_context = {"title": "Crear sensor"}
 
 
-class SensorUpdateView(AccesoEstacionamientosMixin, UpdateView):
+class SensorUpdateView(
+    SynchronizeSensorAfterSaveMixin,
+    ManagedPlazaFormMixin,
+    AccesoEstacionamientosMixin,
+    UpdateView,
+):
     """Edita sensores con el permiso de cambio del modelo."""
     model = Sensor
     permission_required = "estacionamientos.change_sensor"
@@ -118,10 +142,86 @@ class SensorUpdateView(AccesoEstacionamientosMixin, UpdateView):
     extra_context = {"title": "Editar sensor"}
 
 
-class SensorDeleteView(AccesoEstacionamientosMixin, EliminacionProtegidaView):
+class SensorDeleteView(AccesoEstacionamientosMixin, ProtectedDeleteView):
     """Elimina sensores con el permiso de borrado del modelo."""
     model = Sensor
     permission_required = "estacionamientos.delete_sensor"
     template_name = "crud/confirm_delete.html"
     success_url = reverse_lazy("estacionamientos:sensor_list")
     extra_context = {"title": "sensor"}
+
+    def form_valid(self, form):
+        space_id = self.object.estacionamiento_id
+        response = super().form_valid(form)
+        if not Sensor.objects.filter(pk=self.object.pk).exists():
+            synchronize_availability(space_id)
+        return response
+
+
+class PanelOperacionView(LoginPermissionMixin, TemplateView):
+    """Dashboard de operación con datos limitados a las plazas asignadas."""
+
+    permission_required = "estacionamientos.view_operational_dashboard"
+    template_name = "estacionamientos/panel_operacion.html"
+
+    def get_context_data(self, **kwargs):
+        from registros.models import Incidencia, IntentoAcceso
+        from usuarios.models import Acreditacion
+
+        context = super().get_context_data(**kwargs)
+        plazas = managed_plazas(self.request.user)
+        selected_id = self.request.GET.get("plaza")
+        selected = plazas.filter(pk=selected_id).first() if selected_id else None
+        scope = plazas.filter(pk=selected.pk) if selected else plazas
+
+        spaces = Estacionamiento.objects.filter(plaza__in=scope)
+        attempts = IntentoAcceso.objects.filter(plaza__in=scope)
+        pending_accreditations = (
+            Acreditacion.objects.filter(
+                usuario__plazas__in=scope,
+                estado=False,
+            )
+            .select_related("usuario")
+            .prefetch_related(
+                Prefetch("usuario__plazas", queryset=scope)
+            )
+            .distinct()
+            .order_by("pk")
+        )
+        recent_incidents = (
+            Incidencia.objects.filter(
+                registro_uso__estacionamiento__plaza__in=scope,
+            )
+            .select_related(
+                "registro_uso",
+                "registro_uso__estacionamiento",
+                "registro_uso__vehiculo",
+            )
+            .order_by("-fecha_hora")[:8]
+        )
+        recent_attempts = attempts.select_related(
+            "usuario",
+            "vehiculo",
+            "operador",
+            "plaza",
+        ).order_by("-fecha_hora", "-pk")[:8]
+
+        context.update(
+            {
+                "plazas": plazas,
+                "selected_plaza": selected,
+                "space_count": spaces.count(),
+                "available_count": spaces.filter(activo=True, estado=True).count(),
+                "occupied_count": spaces.filter(activo=True, estado=False).count(),
+                "pending_accreditations": pending_accreditations[:8],
+                "pending_accreditation_count": pending_accreditations.count(),
+                "incident_count": Incidencia.objects.filter(
+                    registro_uso__estacionamiento__plaza__in=scope,
+                    estado=True,
+                ).count(),
+                "recent_incidents": recent_incidents,
+                "recent_attempts": recent_attempts,
+                "attempt_count": attempts.count(),
+            }
+        )
+        return context

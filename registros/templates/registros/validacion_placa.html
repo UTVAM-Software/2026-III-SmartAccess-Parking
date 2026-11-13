@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Validar placa | SmartAccess Parking{% endblock %}
+
+{% block content %}
+<section class="attendant-page">
+    <header class="attendant-hero">
+        <div class="attendant-hero-copy">
+            <span class="eyebrow eyebrow-light">PUNTO DE ACCESO · PERSONAL DE APOYO</span>
+            <h1>Revisa una placa.</h1>
+            <p>Captura la matrícula o sube una foto clara. El sistema te dirá si la acreditación está vigente en esta plaza.</p>
+        </div>
+        <div class="attendant-hero-badge" aria-hidden="true"><span>✓</span></div>
+    </header>
+
+    {% if last_plate_check %}
+        <section class="check-result {% if last_plate_check.authorized %}check-result-approved{% else %}check-result-denied{% endif %}" role="status" aria-live="polite">
+            <div class="check-result-symbol" aria-hidden="true">{% if last_plate_check.authorized %}✓{% else %}×{% endif %}</div>
+            <div class="check-result-copy">
+                <span class="eyebrow">RESULTADO · {{ last_plate_check.plaza }}</span>
+                <h2>{% if last_plate_check.authorized %}ACREDITACIÓN VIGENTE{% else %}NO AUTORIZADO{% endif %}</h2>
+                <p>{{ last_plate_check.message }}</p>
+            </div>
+            <div class="check-result-plate">{{ last_plate_check.plate|default:"—" }}</div>
+        </section>
+    {% endif %}
+
+    {% if not assigned_plazas %}
+        <div class="alert alert-warning app-message" role="status">Tu cuenta aún no tiene una plaza asignada. Pide al administrador que la agregue.</div>
+    {% endif %}
+
+    <div class="attendant-workspace">
+        <section class="attendant-form-panel">
+            <div class="panel-heading attendant-form-heading">
+                <div>
+                    <span class="eyebrow">NUEVA REVISIÓN</span>
+                    <h2>Datos del vehículo</h2>
+                </div>
+                <span class="live-indicator"><i aria-hidden="true"></i> Listo para revisar</span>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" class="plate-check-form">
+                {% csrf_token %}
+                {% for field in form.visible_fields %}
+                    <div class="plate-form-field{% if field.name == 'placa_capturada' %} plate-input-field{% endif %}">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small mt-2">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                <button class="btn btn-primary plate-check-button" type="submit">
+                    <span aria-hidden="true">⌕</span> Consultar autorización
+                </button>
+            </form>
+        </section>
+
+        <aside class="attendant-guide-panel">
+            <span class="guide-number">01</span>
+            <span class="eyebrow">GUÍA RÁPIDA</span>
+            <h2>Una revisión simple y clara.</h2>
+            <ol class="guide-steps">
+                <li><span>1</span><div><strong>Captura la placa</strong><p>Escríbela tal como aparece en el vehículo.</p></div></li>
+                <li><span>2</span><div><strong>O sube una fotografía</strong><p>Si no escribes la placa, el sistema intentará leerla.</p></div></li>
+                <li><span>3</span><div><strong>Confirma el resultado</strong><p>Solo se valida el registro y la vigencia para esta plaza.</p></div></li>
+            </ol>
+            <div class="privacy-note"><span aria-hidden="true">◈</span><p>La imagen se mantiene privada y la revisión queda registrada para el administrador.</p></div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

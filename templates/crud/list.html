@@ -101,10 +101,34 @@
             </table>
         </div>
 
-        {% if objects %}
+        {% if paginator %}
             <p class="text-secondary small px-4 py-3 mb-0">
-                Total de registros: {{ objects|length }}
+                Total de registros: {{ paginator.count }}
             </p>
+        {% endif %}
+
+        {% if is_paginated %}
+            <nav class="px-4 pb-4" aria-label="Paginación de resultados">
+                <ul class="pagination justify-content-end mb-0">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                    {% endif %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
         {% endif %}
     </div>
 </section>
