@@ -15,10 +15,10 @@ from django.utils import timezone
 from django.urls import reverse
 from PIL import Image
 
-from estacionamientos.models import Estacionamiento, Sensor
+from estacionamientos.models import Estacionamiento, Plaza, Sensor
 from usuarios.models import Usuario, Vehiculo
 from .models import Boleto, CapturaPlaca, Incidencia, IntentoAcceso, RegistroUso
-from .services import process_manual_access, register_exit
+from .services import process_manual_access
 from usuarios.models import Acreditacion
 
 
@@ -28,18 +28,23 @@ class RegistrosCRUDTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         """Crear datos compartidos para los casos del módulo."""
+        cls.plaza = Plaza.objects.create(nombre="Plaza de prueba")
         cls.usuario = Usuario.objects.create(
             nombre="Ana Pérez",
             correo_electronico="ana@example.com",
             telefono="5551234567",
         )
+        cls.usuario.plazas.add(cls.plaza)
         cls.vehiculo = Vehiculo.objects.create(
             placa="ABC123",
             usuario=cls.usuario,
             modelo="Sedán",
         )
         cls.estacionamiento = Estacionamiento.objects.create(
-            numero_cajon="A-01")
+            numero_cajon="A-01",
+            plaza=cls.plaza,
+            accesible=True,
+        )
 
     def setUp(self):
         """Autenticar un usuario con permisos del módulo."""
@@ -65,6 +70,7 @@ class RegistrosCRUDTests(TestCase):
             )
             permisos_historicos.append(permiso)
         self.user.user_permissions.add(*permisos_historicos)
+        self.plaza.personal_acceso.add(self.user)
         self.client.force_login(self.user)
 
     def test_all_entities_support_create_update_and_delete(self):
@@ -78,12 +84,24 @@ class RegistrosCRUDTests(TestCase):
         )
         response = self.client.post(
             reverse("registros:intento_create"),
-            {"placa_capturada": self.vehiculo.placa},
+            {
+                "placa_capturada": self.vehiculo.placa,
+                "plaza": self.plaza.pk,
+            },
         )
-        self.assertRedirects(response, reverse("registros:intento_list"))
-        registro = RegistroUso.objects.get()
-        self.assertIsNone(registro.hora_salida)
-        self.assertEqual(Boleto.objects.count(), 1)
+        self.assertRedirects(response, reverse("registros:intento_create"))
+        intento = IntentoAcceso.objects.get()
+        self.assertEqual(intento.resultado, IntentoAcceso.Resultado.AUTORIZADO)
+        self.assertEqual(RegistroUso.objects.count(), 0)
+        self.assertEqual(Boleto.objects.count(), 0)
+
+        registro = RegistroUso.objects.create(
+            vehiculo=self.vehiculo,
+            estacionamiento=self.estacionamiento,
+            fecha="2026-10-23",
+            hora_entrada="08:00",
+            estado_acreditacion="Fixture autorizado",
+        )
 
         response = self.client.post(
             reverse("registros:captura_create"),
@@ -300,7 +318,7 @@ class RegistrosCRUDTests(TestCase):
             reverse("login"),
             {"username": "operador", "password": "test-password"},
         )
-        self.assertRedirects(response, reverse("registros:registro_list"))
+        self.assertRedirects(response, reverse("registros:intento_create"))
 
         response = self.client.post(reverse("logout"))
         self.assertRedirects(response, reverse("login"))
@@ -322,6 +340,7 @@ class RegistrosCRUDTests(TestCase):
         """Registra el rechazo de una placa desconocida sin crear ocupación."""
         attempt = process_manual_access(
             operator=self.user,
+            plaza=self.plaza,
             placa_capturada="DESCONOCIDA-01",
         )
 
@@ -336,12 +355,16 @@ class RegistrosCRUDTests(TestCase):
         """La vista manual registra el resultado sin aceptar uno del cliente."""
         response = self.client.post(
             reverse("registros:intento_create"),
-            {"placa_capturada": "NO-REGISTRADA"},
+            {
+                "placa_capturada": "NO-REGISTRADA",
+                "plaza": self.plaza.pk,
+            },
             follow=True,
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Acceso rechazado")
+        self.assertContains(response, "NO AUTORIZADO")
+        self.assertContains(response, "La placa no est\u00e1 registrada en el sistema.")
         attempt = IntentoAcceso.objects.get()
         self.assertEqual(attempt.resultado, IntentoAcceso.Resultado.RECHAZADO)
         self.assertEqual(RegistroUso.objects.count(), 0)
@@ -380,6 +403,7 @@ class RegistrosCRUDTests(TestCase):
 
         attempt = process_manual_access(
             operator=self.user,
+            plaza=self.plaza,
             placa_capturada=self.vehiculo.placa,
         )
 
@@ -407,6 +431,7 @@ class RegistrosCRUDTests(TestCase):
 
         attempt = process_manual_access(
             operator=self.user,
+            plaza=self.plaza,
             placa_capturada=self.vehiculo.placa,
         )
 
@@ -431,6 +456,7 @@ class RegistrosCRUDTests(TestCase):
 
         attempt = process_manual_access(
             operator=self.user,
+            plaza=self.plaza,
             placa_capturada=self.vehiculo.placa.lower(),
         )
 
@@ -445,6 +471,7 @@ class RegistrosCRUDTests(TestCase):
         Estacionamiento.objects.create(numero_cajon="A-02")
         duplicate = process_manual_access(
             operator=self.user,
+            plaza=self.plaza,
             placa_capturada=self.vehiculo.placa,
         )
         self.assertEqual(duplicate.resultado, IntentoAcceso.Resultado.RECHAZADO)
@@ -495,6 +522,7 @@ class RegistrosCRUDTests(TestCase):
         ):
             attempt = process_manual_access(
                 operator=self.user,
+                plaza=self.plaza,
                 placa_capturada="DESCONOCIDA-IMAGEN",
                 imagen=SimpleUploadedFile(
                     "placa.png",
@@ -504,7 +532,7 @@ class RegistrosCRUDTests(TestCase):
             )
             self.assertTrue(attempt.imagen.storage.exists(attempt.imagen.name))
             with self.assertRaises(SuspiciousOperation):
-                attempt.imagen.url
+                str(attempt.imagen.url)
 
             response = self.client.get(
                 reverse("registros:intento_imagen", args=[attempt.pk])
