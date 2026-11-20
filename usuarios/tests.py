@@ -1,15 +1,20 @@
 """Pruebas de autenticación y permisos de usuarios y vehículos."""
 
+from io import BytesIO
 from datetime import timedelta
+from tempfile import TemporaryDirectory
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from django.utils import timezone
+from PIL import Image
 
+from estacionamientos.models import Plaza
 from .models import Acreditacion, Usuario, Vehiculo
 
 
@@ -142,3 +147,74 @@ class AcreditacionVigenciaTests(TestCase):
 					fecha_validacion=timezone.localdate(),
 					estado=True,
 				)
+
+
+class RegistroPublicoAcreditacionTests(TestCase):
+	"""Una solicitud nueva queda visible para el revisor de su plaza."""
+
+	@classmethod
+	def setUpTestData(cls):
+		cls.plaza = Plaza.objects.create(nombre="Plaza de revisión")
+		cls.reviewer = get_user_model().objects.create_user(
+			username="revisor",
+			password="test-password",
+		)
+		cls.reviewer.user_permissions.add(
+			*Permission.objects.filter(
+				content_type__app_label="usuarios",
+				codename__in=("view_acreditacion", "change_acreditacion"),
+			)
+		)
+		cls.reviewer.user_permissions.add(
+			*Permission.objects.filter(
+				content_type__app_label="estacionamientos",
+				codename="view_operational_dashboard",
+			)
+		)
+		cls.plaza.administradores.add(cls.reviewer)
+
+	def test_new_registration_appears_in_assigned_reviewer_list(self):
+		image = BytesIO()
+		Image.new("RGB", (2, 2), color="white").save(image, format="PNG")
+		image.seek(0)
+		registration = {
+			"username": "persona-nueva",
+			"email": "persona-nueva@example.test",
+			"nombre": "Persona Nueva",
+			"apellido_paterno": "Prueba",
+			"apellido_materno": "",
+			"telefono": "5551234567",
+			"estado": "Hidalgo",
+			"municipio": "Tizayuca",
+			"plazas": [str(self.plaza.pk)],
+			"placa": "NVA123",
+			"marca": "",
+			"modelo": "Auto de prueba",
+			"color": "",
+			"documento_imagen": SimpleUploadedFile(
+				"documento.png",
+				image.getvalue(),
+				content_type="image/png",
+			),
+			"password1": "strong-test-password-872!",
+			"password2": "strong-test-password-872!",
+		}
+
+		with TemporaryDirectory() as private_root, override_settings(
+			PRIVATE_MEDIA_ROOT=private_root
+		):
+			response = self.client.post(
+				reverse("usuarios:registro_publico"), registration
+			)
+
+		self.assertRedirects(response, reverse("usuarios:mi_cuenta"))
+		new_profile = Usuario.objects.get(cuenta__username="persona-nueva")
+		self.assertFalse(new_profile.acreditacion.estado)
+		self.assertIn(self.plaza, new_profile.plazas.all())
+
+		self.client.force_login(self.reviewer)
+		response = self.client.get(reverse("usuarios:acreditacion_list"))
+
+		self.assertContains(response, "Persona Nueva Prueba")
+		response = self.client.get(reverse("estacionamientos:panel_operacion"))
+		self.assertContains(response, "Persona Nueva Prueba")

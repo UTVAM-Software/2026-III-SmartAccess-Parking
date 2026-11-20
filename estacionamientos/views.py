@@ -49,6 +49,7 @@ class EstacionamientoListView(AccesoEstacionamientosMixin, ListView):
     template_name = "crud/list.html"
     context_object_name = "objects"
     paginate_by = 25
+    ordering = ("plaza__nombre", "numero_cajon")
     extra_context = {
         "title": "Estacionamientos",
         "create_url": "estacionamientos:estacionamiento_create",
@@ -103,6 +104,7 @@ class SensorListView(AccesoEstacionamientosMixin, ListView):
     template_name = "crud/list.html"
     context_object_name = "objects"
     paginate_by = 25
+    ordering = ("estacionamiento__numero_cajon", "pk")
     queryset = Sensor.objects.select_related("estacionamiento")
     extra_context = {
         "title": "Sensores",

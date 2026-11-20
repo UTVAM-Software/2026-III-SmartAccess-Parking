@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 from common.admin import SuperuserOnlyModelAdmin
 from .models import Estacionamiento, Plaza, Sensor
@@ -13,22 +14,39 @@ class PlazaAdmin(SuperuserOnlyModelAdmin):
     search_fields = ("nombre",)
     filter_horizontal = ("administradores", "personal_acceso")
 
+    ROLE_ASSIGNMENTS = {
+        "administradores": "Administrador de estacionamiento",
+        "personal_acceso": "Viene viene",
+    }
+
+    def _eligible_accounts(self):
+        return get_user_model().objects.filter(
+            is_active=True,
+            is_staff=False,
+            is_superuser=False,
+        ).order_by("username")
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        if db_field.name == "administradores":
-            kwargs["queryset"] = get_user_model().objects.filter(
-                is_active=True,
-                is_staff=False,
-                is_superuser=False,
-                groups__name="Administrador de estacionamiento",
-            ).distinct().order_by("username")
-        elif db_field.name == "personal_acceso":
-            kwargs["queryset"] = get_user_model().objects.filter(
-                is_active=True,
-                is_staff=False,
-                is_superuser=False,
-                groups__name="Viene viene",
-            ).distinct().order_by("username")
+        if db_field.name in self.ROLE_ASSIGNMENTS:
+            kwargs["queryset"] = self._eligible_accounts()
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        user_model = get_user_model()
+        for field_name, group_name in self.ROLE_ASSIGNMENTS.items():
+            assigned_ids = Plaza.objects.filter(activa=True).values_list(
+                f"{field_name}__pk",
+                flat=True,
+            )
+            eligible_assignees = user_model.objects.filter(
+                pk__in=assigned_ids,
+                is_active=True,
+                is_staff=False,
+                is_superuser=False,
+            ).distinct()
+            group, _ = Group.objects.get_or_create(name=group_name)
+            group.user_set.set(eligible_assignees)
 
 
 @admin.register(Estacionamiento)

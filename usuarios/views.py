@@ -211,6 +211,7 @@ class UsuarioListView(AccesoUsuariosMixin, ListView):
     template_name = "crud/list.html"
     context_object_name = "objects"
     paginate_by = 25
+    ordering = ("-pk",)
     extra_context = {
         "title": "Usuarios",
         "create_url": "usuarios:usuario_create",
@@ -255,6 +256,7 @@ class VehiculoListView(AccesoUsuariosMixin, ListView):
     template_name = "crud/list.html"
     context_object_name = "objects"
     paginate_by = 25
+    ordering = ("placa",)
     queryset = Vehiculo.objects.select_related("usuario")
     extra_context = {
         "title": "Vehículos",
@@ -301,6 +303,7 @@ class AcreditacionListView(AccesoUsuariosMixin, ListView):
     template_name = "crud/list.html"
     context_object_name = "objects"
     paginate_by = 25
+    ordering = ("-pk",)
     queryset = Acreditacion.objects.select_related("usuario")
     extra_context = {
         "title": "Acreditaciones",
